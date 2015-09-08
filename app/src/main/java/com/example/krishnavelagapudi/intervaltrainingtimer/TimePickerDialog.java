@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.NumberPicker;
 
 
@@ -34,17 +35,18 @@ public class TimePickerDialog extends DialogFragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.dialog_time_picker, container, false);
+        final View view = inflater.inflate(R.layout.dialog_time_picker, container, false);
         getDialog().setTitle(getString(R.string.time_picker));
-        NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
-        NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
+        final NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
+        final NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
         setMinMaxForPicker(minutePicker, 0, 60);
         setMinMaxForPicker(secondPicker, 0, 59);
         Button okButton = (Button) view.findViewById(R.id.ok_button);
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnTimePickedListener.onTimePicked("workout name", 0, 0);
+                EditText editText = (EditText) view.findViewById(R.id.label_edit_text);
+                mOnTimePickedListener.onTimePicked(editText.getText().toString(), minutePicker.getValue(), secondPicker.getValue());
                 getDialog().cancel();
             }
         });
