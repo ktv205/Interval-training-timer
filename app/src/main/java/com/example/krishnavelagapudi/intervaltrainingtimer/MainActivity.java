@@ -35,6 +35,9 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
     @Override
     public void onTimePicked(String workoutName, int minutes, int seconds) {
+        if (workoutName.isEmpty()) {
+            workoutName = "Workout Name Here";
+        }
         workoutModelList.add(new WorkoutModel(workoutName, minutes, seconds));
         count++;
         if (count == nTimes) {
