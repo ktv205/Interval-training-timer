@@ -20,6 +20,8 @@ public class TimePickerDialog extends DialogFragment {
 
     public interface OnTimePickedListener {
         void onTimePicked(String workoutName, int minutes, int seconds);
+
+        void onTimePicked(String workoutName, int minutes, int seconds, int position);
     }
 
     @Override
@@ -42,11 +44,23 @@ public class TimePickerDialog extends DialogFragment {
         setMinMaxForPicker(minutePicker, 0, 60);
         setMinMaxForPicker(secondPicker, 0, 59);
         Button okButton = (Button) view.findViewById(R.id.ok_button);
+        final int key = getArguments().getInt(getString(R.string.time_picker_key));
+
+
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 EditText editText = (EditText) view.findViewById(R.id.label_edit_text);
-                mOnTimePickedListener.onTimePicked(editText.getText().toString(), minutePicker.getValue(), secondPicker.getValue());
+                int position = -1;
+                if (key == getResources().getInteger(R.integer.time_changer)) {
+                    position = getArguments().getInt(getString(R.string.list_position));
+                }
+                if (position == -1) {
+                    mOnTimePickedListener.onTimePicked(editText.getText().toString(), minutePicker.getValue(), secondPicker.getValue());
+                } else {
+                    mOnTimePickedListener.onTimePicked(editText.getText().toString(), minutePicker.getValue(), secondPicker.getValue(), position);
+                }
+
                 getDialog().cancel();
             }
         });

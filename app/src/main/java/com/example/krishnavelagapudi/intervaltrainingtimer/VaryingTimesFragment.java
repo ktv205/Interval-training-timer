@@ -25,6 +25,10 @@ public class VaryingTimesFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 NumberPickerDialog numberPickerDialog = new NumberPickerDialog();
+                Bundle bundle = new Bundle();
+                bundle.putInt(getActivity().getResources().getString(R.string.select_workout_number),
+                        getActivity().getResources().getInteger(R.integer.workout_number));
+                numberPickerDialog.setArguments(bundle);
                 numberPickerDialog.show(getActivity().getFragmentManager(), NUMBER_DIALOG);
             }
         });

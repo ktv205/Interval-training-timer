@@ -22,24 +22,78 @@ public class ReviewFragment extends Fragment {
 
     private static final String TIME_PICKER_DIALOG_TAG = "time picker";
     private static final String NUMBER_PICKER_DIALOG_TAG = "number picker";
+    private static final String TAG = ReviewFragment.class.getSimpleName();
+    ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
+    private View mView;
+    Button mRepeatButton;
+    RecyclerView mRecyclerView;
+    private RecyclerViewAdapter mRecyclerViewAdapter;
+    private int mNumber=1;
+
+    private OnStartTimerListener mOnStartTimerListener;
+
+    public interface OnStartTimerListener {
+        void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number);
+    }
+
+   /* @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        try {
+            this.mOnStartTimerListener = (OnStartTimerListener)getActivity();
+        } catch (final ClassCastException e) {
+            throw new ClassCastException(context.toString() + " must implement OnNumberPickedListener");
+        }
+    }*/
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_review, container, false);
-        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
-        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
-        recyclerView.setAdapter(new RecyclerViewAdapter(workoutModelArrayList));
-        Button repeatButton = (Button) view.findViewById(R.id.repeat_button);
-        repeatButton.setOnClickListener(new View.OnClickListener() {
+        this.mOnStartTimerListener = (OnStartTimerListener)getActivity();
+        mView = inflater.inflate(R.layout.fragment_review, container, false);
+        mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
+        mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        mWorkoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
+        mRecyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
+        mRecyclerView.setAdapter(new RecyclerViewAdapter(mWorkoutModelArrayList));
+        mRepeatButton = (Button) mView.findViewById(R.id.repeat_button);
+        mRepeatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 NumberPickerDialog numberPickerDialog = new NumberPickerDialog();
+                Bundle bundle = new Bundle();
+                bundle.putInt(getResources().getString(R.string.select_workout_number),
+                        getResources().getInteger(R.integer.repeat_number));
+                numberPickerDialog.setArguments(bundle);
                 numberPickerDialog.show(getFragmentManager(), NUMBER_PICKER_DIALOG_TAG);
             }
         });
-        return view;
+        Button startButton = (Button) mView.findViewById(R.id.start_button);
+        startButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber);
+
+            }
+        });
+
+        return mView;
+    }
+
+    public void changeTime(int minutes, int seconds, int position) {
+        View view = mRecyclerView.getChildAt(position);
+        TextView textView = (TextView) view.findViewById(R.id.time_text_view);
+        String time = String.format("%02d", minutes) + ":"
+                + String.format("%02d", seconds) + " minutes";
+        textView.setText(time);
+        WorkoutModel model = mWorkoutModelArrayList.get(position);
+        mWorkoutModelArrayList.remove(position);
+        mWorkoutModelArrayList.add(position, new WorkoutModel(model.getWorkoutName(), minutes, seconds));
+    }
+
+    public void updateRepeatTimes(int number) {
+        mNumber = number;
+        mRepeatButton.setText("Repeat " + number + " times");
     }
 
 
@@ -47,9 +101,8 @@ public class ReviewFragment extends Fragment {
 
         ArrayList<WorkoutModel> mWorkoutModelList = new ArrayList<>();
 
-        public RecyclerViewAdapter(ArrayList<WorkoutModel> parcelableArrayList) {
-            mWorkoutModelList = parcelableArrayList;
-
+        public RecyclerViewAdapter(ArrayList<WorkoutModel> mWorkoutModelList) {
+            this.mWorkoutModelList = mWorkoutModelList;
         }
 
         @Override
@@ -57,16 +110,22 @@ public class ReviewFragment extends Fragment {
             return new ViewHolder(LayoutInflater.from(viewGroup.getContext()).inflate(R.layout.item_recycler_view, viewGroup, false));
         }
 
+
         @Override
         public void onBindViewHolder(ViewHolder viewHolder, int i) {
-            String time = String.format("%2d", mWorkoutModelList.get(i).getMin()) + ":"
-                    + String.format("%2d", mWorkoutModelList.get(i).getSec()) + " minutes";
+            final int position = i;
+            String time = String.format("%02d", mWorkoutModelList.get(i).getMin()) + ":"
+                    + String.format("%02d", mWorkoutModelList.get(i).getSec()) + " minutes";
             viewHolder.timeTextView.setText(time);
             viewHolder.workoutTextView.setText(mWorkoutModelList.get(i).getWorkoutName());
             viewHolder.changeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
                     TimePickerDialog timePickerDialog = new TimePickerDialog();
+                    Bundle bundle = new Bundle();
+                    bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_changer));
+                    bundle.putInt(getString(R.string.list_position), position);
+                    timePickerDialog.setArguments(bundle);
                     timePickerDialog.show(getFragmentManager(), TIME_PICKER_DIALOG_TAG);
                 }
             });
@@ -76,6 +135,15 @@ public class ReviewFragment extends Fragment {
         public int getItemCount() {
             return mWorkoutModelList.size();
         }
+
+        /*public void dataChanged() {
+            mWorkoutModelList.clear();
+            mWorkoutModelList.addAll(mWorkoutModelArrayList);
+            Log.d(TAG,"size->"+mWorkoutModelList.size());
+            notifyDataSetChanged();
+
+        }*/
+
 
         class ViewHolder extends RecyclerView.ViewHolder {
             TextView workoutTextView, timeTextView;
@@ -88,5 +156,6 @@ public class ReviewFragment extends Fragment {
                 changeButton = (Button) itemView.findViewById(R.id.change_button);
             }
         }
+
     }
 }

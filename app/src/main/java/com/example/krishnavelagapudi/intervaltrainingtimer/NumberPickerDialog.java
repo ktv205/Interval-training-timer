@@ -19,7 +19,7 @@ public class NumberPickerDialog extends DialogFragment {
     private OnNumberPickedListener mOnNumberPickedListener;
 
     public interface OnNumberPickedListener {
-        void onNumberPicked(int number);
+        void onNumberPicked(int number, int key);
     }
 
     @Override
@@ -48,10 +48,11 @@ public class NumberPickerDialog extends DialogFragment {
             }
         });
         Button button = (Button) view.findViewById(R.id.ok_button);
+        final int key = getArguments().getInt(getString(R.string.select_workout_number));
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnNumberPickedListener.onNumberPicked(numberPicker.getValue());
+                mOnNumberPickedListener.onNumberPicked(numberPicker.getValue(), key);
                 getDialog().cancel();
 
             }

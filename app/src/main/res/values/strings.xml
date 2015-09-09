@@ -16,4 +16,8 @@
     <string name="start">start</string>
     <string name="change">change</string>
     <string name="workout_key">workout list</string>
+    <string name="select_workout_number">workout number</string>
+    <string name="time_picker_key">time picker key</string>
+    <string name="list_position">list position</string>
+    <string name="pause">pause</string>
 </resources>
