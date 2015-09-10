@@ -28,7 +28,7 @@ public class ReviewFragment extends Fragment {
     Button mRepeatButton;
     RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
-    private int mNumber=1;
+    private int mNumber = 1;
 
     private OnStartTimerListener mOnStartTimerListener;
 
@@ -49,7 +49,7 @@ public class ReviewFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        this.mOnStartTimerListener = (OnStartTimerListener)getActivity();
+        this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -80,20 +80,25 @@ public class ReviewFragment extends Fragment {
         return mView;
     }
 
-    public void changeTime(int minutes, int seconds, int position) {
+    public void changeTime(WorkoutModel workoutModel, int position) {
         View view = mRecyclerView.getChildAt(position);
-        TextView textView = (TextView) view.findViewById(R.id.time_text_view);
-        String time = String.format("%02d", minutes) + ":"
-                + String.format("%02d", seconds) + " minutes";
-        textView.setText(time);
-        WorkoutModel model = mWorkoutModelArrayList.get(position);
+        TextView TimeTextView = (TextView) view.findViewById(R.id.time_text_view);
+        String time = String.format("%02d", workoutModel.getMin()) + ":"
+                + String.format("%02d", workoutModel.getSec()) + " minutes";
+        TimeTextView.setText(time);
+        TextView titleTextView = (TextView) view.findViewById(R.id.title_text_view);
+        titleTextView.setText(workoutModel.getWorkoutName());
         mWorkoutModelArrayList.remove(position);
-        mWorkoutModelArrayList.add(position, new WorkoutModel(model.getWorkoutName(), minutes, seconds));
+        mWorkoutModelArrayList.add(position, workoutModel);
     }
 
     public void updateRepeatTimes(int number) {
         mNumber = number;
-        mRepeatButton.setText("Repeat " + number + " times");
+        if (number == 1) {
+            mRepeatButton.setText("Dont repeat");
+        } else {
+            mRepeatButton.setText("Repeat " + number + " times");
+        }
     }
 
 
@@ -125,6 +130,7 @@ public class ReviewFragment extends Fragment {
                     Bundle bundle = new Bundle();
                     bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_changer));
                     bundle.putInt(getString(R.string.list_position), position);
+                    bundle.putParcelable(getString(R.string.workout_key), mWorkoutModelList.get(position));
                     timePickerDialog.setArguments(bundle);
                     timePickerDialog.show(getFragmentManager(), TIME_PICKER_DIALOG_TAG);
                 }

@@ -28,6 +28,8 @@ public class TimerFragment extends Fragment {
     final static int PAUSE = 0;
     final static int RESUME = 1;
     int mPauseResumeFlag = RESUME;
+    int mTotalTime;
+    int mWorkoutNumber;
 
     @Nullable
     @Override
@@ -37,10 +39,24 @@ public class TimerFragment extends Fragment {
         mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);
         ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
         mWorkoutModelArrayList = workoutModelArrayList;
+        if (savedInstanceState == null) {
+            mWorkoutNumber = 1;
+            mTotalTime = 0;
+            mRepeatTimes = getArguments().getInt(getString(R.string.select_workout_number));
+        } else {
+            mWorkoutNumber = savedInstanceState.getInt(getString(R.string.workout_number));
+            mTotalTime = savedInstanceState.getInt(getString(R.string.total_time));
+            mRepeatTimes = savedInstanceState.getInt(getString(R.string.repeat_times));
+            mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.state), mPauseResumeFlag);
+        }
+
+        final Button pauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
+        if (mPauseResumeFlag == PAUSE) {
+            pauseResumeButton.setText(R.string.resume);
+            mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
+        }
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(timer, 0, 1000);
-        mRepeatTimes = getArguments().getInt(getString(R.string.select_workout_number));
-        final Button pauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
         pauseResumeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,12 +73,25 @@ public class TimerFragment extends Fragment {
         return view;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(getString(R.string.workout_number), mWorkoutNumber);
+        outState.putInt(getString(R.string.repeat_times), mRepeatTimes);
+        outState.putInt(getString(R.string.total_time), mTotalTime);
+        outState.putInt(getString(R.string.state), mPauseResumeFlag);
+        super.onSaveInstanceState(outState);
+
+    }
+
     TimerTask timer = new TimerTask() {
 
         @Override
         public void run() {
-            mRepeatTimes--;
-            for (final WorkoutModel workoutModel : mWorkoutModelArrayList) {
+            if (mTotalTime == 0) {
+                mRepeatTimes--;
+            }
+            while (mWorkoutNumber > 0) {
+                final WorkoutModel workoutModel = mWorkoutModelArrayList.get(mWorkoutNumber - 1);
                 if (getActivity() != null) {
                     getActivity().runOnUiThread(new Runnable() {
                         @Override
@@ -71,16 +100,15 @@ public class TimerFragment extends Fragment {
                         }
                     });
                 }
-
-                int totalNumber = 0;
-                if (workoutModel.getMin() > 0) {
-                    totalNumber = workoutModel.getMin() * 60;
+                if (mTotalTime == 0) {
+                    if (workoutModel.getMin() > 0) {
+                        mTotalTime = workoutModel.getMin() * 60;
+                    }
+                    mTotalTime = mTotalTime + workoutModel.getSec();
                 }
-                totalNumber = totalNumber + workoutModel.getSec();
-                int i = totalNumber;
-                while (i >= 0) {
+                while (mTotalTime >= 0) {
                     if (mPauseResumeFlag == RESUME) {
-                        final String time = String.format("%02d", (i / 60)) + ":" + String.format("%02d", (i % 60));
+                        final String time = String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60));
                         if (getActivity() != null) {
                             getActivity().runOnUiThread(new Runnable() {
                                 @Override
@@ -88,7 +116,7 @@ public class TimerFragment extends Fragment {
                                     mTimeTextView.setText(time);
                                 }
                             });
-                            i--;
+                            mTotalTime--;
                         }
                     }
                     try {
@@ -98,6 +126,7 @@ public class TimerFragment extends Fragment {
                     }
 
                 }
+                mWorkoutNumber--;
 
             }
             if (mRepeatTimes <= 0) {

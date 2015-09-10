@@ -24,8 +24,8 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         setContentView(R.layout.activity_main);
         VaryingTimesFragment varyingTimesFragment = (VaryingTimesFragment) getFragmentManager().findFragmentByTag(VARYING_TIMES_FRAGMENT_TAG);
         ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(REVIEW_FRAGMENT_TAG);
-        TimerFragment timerFragment=(TimerFragment)getFragmentManager().findFragmentByTag(TIMER_FRAGMENT_TAG);
-        if(timerFragment==null) {
+        TimerFragment timerFragment = (TimerFragment) getFragmentManager().findFragmentByTag(TIMER_FRAGMENT_TAG);
+        if (timerFragment == null) {
             if (reviewFragment == null) {
                 if (varyingTimesFragment == null) {
                     varyingTimesFragment = new VaryingTimesFragment();
@@ -57,7 +57,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     public void onTimePicked(String workoutName, int minutes, int seconds, int position) {
         ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(REVIEW_FRAGMENT_TAG);
         if (reviewFragment != null) {
-            reviewFragment.changeTime(minutes, seconds, position);
+            reviewFragment.changeTime(new WorkoutModel(workoutName, minutes, seconds), position);
         }
     }
 
