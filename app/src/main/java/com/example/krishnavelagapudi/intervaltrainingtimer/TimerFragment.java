@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -23,9 +24,10 @@ public class TimerFragment extends Fragment {
     int mRepeatTimes;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private TextView mTitleTextView;
-
-
     private Timer mTimer;
+    final static int PAUSE = 0;
+    final static int RESUME = 1;
+    int mPauseResumeFlag = RESUME;
 
     @Nullable
     @Override
@@ -38,6 +40,19 @@ public class TimerFragment extends Fragment {
         mTimer = new Timer();
         mTimer.scheduleAtFixedRate(timer, 0, 1000);
         mRepeatTimes = getArguments().getInt(getString(R.string.select_workout_number));
+        final Button pauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
+        pauseResumeButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (pauseResumeButton.getText().toString().equals(getString(R.string.pause))) {
+                    pauseResumeButton.setText(R.string.resume);
+                    mPauseResumeFlag = PAUSE;
+                } else {
+                    pauseResumeButton.setText(R.string.pause);
+                    mPauseResumeFlag = RESUME;
+                }
+            }
+        });
 
         return view;
     }
@@ -47,21 +62,35 @@ public class TimerFragment extends Fragment {
         @Override
         public void run() {
             mRepeatTimes--;
-            for (WorkoutModel workoutModel : mWorkoutModelArrayList) {
-                mTitleTextView.setText(workoutModel.getWorkoutName());
+            for (final WorkoutModel workoutModel : mWorkoutModelArrayList) {
+                if (getActivity() != null) {
+                    getActivity().runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mTitleTextView.setText(workoutModel.getWorkoutName());
+                        }
+                    });
+                }
+
                 int totalNumber = 0;
                 if (workoutModel.getMin() > 0) {
                     totalNumber = workoutModel.getMin() * 60;
                 }
                 totalNumber = totalNumber + workoutModel.getSec();
-                for (int i = totalNumber; i >= 0; i--) {
-                    final String time = String.format("%02d", (i / 60)) + ":" + String.format("%02d", (i % 60));
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTimeTextView.setText(time);
+                int i = totalNumber;
+                while (i >= 0) {
+                    if (mPauseResumeFlag == RESUME) {
+                        final String time = String.format("%02d", (i / 60)) + ":" + String.format("%02d", (i % 60));
+                        if (getActivity() != null) {
+                            getActivity().runOnUiThread(new Runnable() {
+                                @Override
+                                public void run() {
+                                    mTimeTextView.setText(time);
+                                }
+                            });
+                            i--;
                         }
-                    });
+                    }
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -78,5 +107,9 @@ public class TimerFragment extends Fragment {
 
     };
 
-
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mTimer.cancel();
+    }
 }

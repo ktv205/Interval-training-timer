@@ -24,11 +24,14 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         setContentView(R.layout.activity_main);
         VaryingTimesFragment varyingTimesFragment = (VaryingTimesFragment) getFragmentManager().findFragmentByTag(VARYING_TIMES_FRAGMENT_TAG);
         ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(REVIEW_FRAGMENT_TAG);
-        if (reviewFragment == null) {
-            if (varyingTimesFragment == null) {
-                varyingTimesFragment = new VaryingTimesFragment();
+        TimerFragment timerFragment=(TimerFragment)getFragmentManager().findFragmentByTag(TIMER_FRAGMENT_TAG);
+        if(timerFragment==null) {
+            if (reviewFragment == null) {
+                if (varyingTimesFragment == null) {
+                    varyingTimesFragment = new VaryingTimesFragment();
+                }
+                getFragmentManager().beginTransaction().replace(R.id.frame_container, varyingTimesFragment, VARYING_TIMES_FRAGMENT_TAG).commit();
             }
-            getFragmentManager().beginTransaction().replace(R.id.frame_container, varyingTimesFragment, VARYING_TIMES_FRAGMENT_TAG).commit();
         }
     }
 

@@ -20,4 +20,5 @@
     <string name="time_picker_key">time picker key</string>
     <string name="list_position">list position</string>
     <string name="pause">pause</string>
+    <string name="resume">resume</string>
 </resources>
