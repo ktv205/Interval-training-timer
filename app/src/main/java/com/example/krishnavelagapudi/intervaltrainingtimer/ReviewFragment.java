@@ -9,7 +9,9 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
@@ -23,12 +25,14 @@ public class ReviewFragment extends Fragment {
     private static final String TIME_PICKER_DIALOG_TAG = "time picker";
     private static final String NUMBER_PICKER_DIALOG_TAG = "number picker";
     private static final String TAG = ReviewFragment.class.getSimpleName();
+    private static final int SETS_EMPTY = 1;
+    private static final int TITLE_EMPTY = 2;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private View mView;
     Button mRepeatButton;
     RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
-    private int mNumber = 1;
+    private int mNumber = 0;
 
     private OnStartTimerListener mOnStartTimerListener;
 
@@ -36,15 +40,6 @@ public class ReviewFragment extends Fragment {
         void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number);
     }
 
-   /* @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-        try {
-            this.mOnStartTimerListener = (OnStartTimerListener)getActivity();
-        } catch (final ClassCastException e) {
-            throw new ClassCastException(context.toString() + " must implement OnNumberPickedListener");
-        }
-    }*/
 
     @Nullable
     @Override
@@ -57,6 +52,7 @@ public class ReviewFragment extends Fragment {
         mRecyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
         mRecyclerView.setAdapter(new RecyclerViewAdapter(mWorkoutModelArrayList));
         mRepeatButton = (Button) mView.findViewById(R.id.repeat_button);
+        final EditText titleEditText = (EditText) mView.findViewById(R.id.title_edit_text);
         mRepeatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -72,12 +68,33 @@ public class ReviewFragment extends Fragment {
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber);
+                int value = checkFields(titleEditText);
+                if (value == 0) {
+                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber);
+                } else {
+                    String error = null;
+                    if (value == TITLE_EMPTY) {
+                        error = "Please name the workout";
+                    } else if (value == SETS_EMPTY) {
+                        error = "Please select sets by clicking the repeat times button";
+                    }
+                    Toast.makeText(getActivity(), error, Toast.LENGTH_SHORT).show();
+                }
 
             }
         });
 
         return mView;
+    }
+
+    private int checkFields(EditText title) {
+        int value = 0;
+        if (mNumber == 0) {
+            value = SETS_EMPTY;
+        } else if (title.getText().toString().isEmpty()) {
+            value = TITLE_EMPTY;
+        }
+        return value;
     }
 
     public void changeTime(WorkoutModel workoutModel, int position) {
@@ -141,14 +158,6 @@ public class ReviewFragment extends Fragment {
         public int getItemCount() {
             return mWorkoutModelList.size();
         }
-
-        /*public void dataChanged() {
-            mWorkoutModelList.clear();
-            mWorkoutModelList.addAll(mWorkoutModelArrayList);
-            Log.d(TAG,"size->"+mWorkoutModelList.size());
-            notifyDataSetChanged();
-
-        }*/
 
 
         class ViewHolder extends RecyclerView.ViewHolder {

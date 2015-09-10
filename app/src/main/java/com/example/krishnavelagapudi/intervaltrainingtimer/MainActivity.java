@@ -84,7 +84,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     public void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number) {
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(getString(R.string.workout_key), workoutModelArrayList);
-        bundle.putInt(getString(R.string.select_workout_number), number);
+        bundle.putInt(getString(R.string.repeat_times), number);
         TimerFragment timerFragment = new TimerFragment();
         timerFragment.setArguments(bundle);
         getFragmentManager().beginTransaction().replace(R.id.frame_container, timerFragment, TIMER_FRAGMENT_TAG).commit();
