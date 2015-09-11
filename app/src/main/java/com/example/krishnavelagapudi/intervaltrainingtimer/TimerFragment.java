@@ -3,7 +3,6 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 import android.app.Fragment;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,6 +20,7 @@ import java.util.TimerTask;
  */
 public class TimerFragment extends Fragment {
     private static final String TAG = TimerFragment.class.getSimpleName();
+    private static final int STOP = 2;
     TextView mTimeTextView;
     int mRepeatTimes;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
@@ -33,6 +33,8 @@ public class TimerFragment extends Fragment {
     int mWorkoutNumber;
     int mTotalSets;
     private TextView mSetsTextView;
+    boolean mIsFinished = false;
+    private Button mPauseResumeButton;
 
     @Nullable
     @Override
@@ -40,45 +42,61 @@ public class TimerFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
         mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);
+        mSetsTextView = (TextView) view.findViewById(R.id.sets_textView);
         ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
         mWorkoutModelArrayList = workoutModelArrayList;
         if (savedInstanceState == null) {
             mWorkoutNumber = 1;
             mTotalTime = -1;
             mRepeatTimes = getArguments().getInt(getString(R.string.repeat_times));
-            Log.d(TAG, "repeatTimes->" + mRepeatTimes);
             mTotalSets = mRepeatTimes;
         } else {
             mWorkoutNumber = savedInstanceState.getInt(getString(R.string.workout_number));
             mTotalTime = savedInstanceState.getInt(getString(R.string.total_time));
             mRepeatTimes = savedInstanceState.getInt(getString(R.string.repeat_times));
             mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.state), mPauseResumeFlag);
-            mTotalSets = getArguments().getInt(getString(R.string.select_workout_number));
+            mTotalSets = getArguments().getInt(getString(R.string.repeat_times));
+            mSetsTextView.setText("Set " + (mTotalSets - mRepeatTimes));
+
         }
 
-        mSetsTextView = (TextView) view.findViewById(R.id.sets_textView);
 
-        final Button pauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
+        mPauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
         if (mPauseResumeFlag == PAUSE) {
-            pauseResumeButton.setText(R.string.resume);
+            mPauseResumeButton.setText(R.string.resume);
             mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
         }
         mTimer = new Timer();
-        mTimer.scheduleAtFixedRate(timer, 0, 1000);
-        pauseResumeButton.setOnClickListener(new View.OnClickListener() {
+        mTimer.scheduleAtFixedRate(new IntervalTimerTask(), 0, 1000);
+        mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (pauseResumeButton.getText().toString().equals(getString(R.string.pause))) {
-                    pauseResumeButton.setText(R.string.resume);
+                if (mPauseResumeButton.getText().toString().equals(getString(R.string.pause))) {
+                    mPauseResumeButton.setText(R.string.resume);
                     mPauseResumeFlag = PAUSE;
-                } else {
-                    pauseResumeButton.setText(R.string.pause);
+                } else if (mPauseResumeButton.getText().toString().equals(getString(R.string.resume))) {
+                    mPauseResumeButton.setText(R.string.pause);
                     mPauseResumeFlag = RESUME;
+                } else {
+                    mPauseResumeButton.setText(getString(R.string.pause));
+                    mPauseResumeFlag = RESUME;
+                    reset();
                 }
             }
         });
 
         return view;
+    }
+
+    private void reset() {
+        mWorkoutNumber = 1;
+        mTotalTime = -1;
+        mRepeatTimes = mTotalSets;
+        mTimer.purge();
+        mTimer = new Timer();
+        mTimer.scheduleAtFixedRate(new IntervalTimerTask(), 0, 1000);
+
+
     }
 
     @Override
@@ -87,11 +105,13 @@ public class TimerFragment extends Fragment {
         outState.putInt(getString(R.string.repeat_times), mRepeatTimes);
         outState.putInt(getString(R.string.total_time), mTotalTime);
         outState.putInt(getString(R.string.state), mPauseResumeFlag);
+        outState.putBoolean(getString(R.string.finished), mIsFinished);
         super.onSaveInstanceState(outState);
 
     }
 
-    TimerTask timer = new TimerTask() {
+    public class IntervalTimerTask extends TimerTask {
+
 
         @Override
         public void run() {
@@ -148,11 +168,20 @@ public class TimerFragment extends Fragment {
             mWorkoutNumber = 1;
             mTotalTime = -1;
             if (mRepeatTimes <= 0) {
+                mIsFinished = true;
+                getActivity().runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        mPauseResumeButton.setText(getString(R.string.start_again));
+                    }
+                });
+
+                mPauseResumeFlag = STOP;
                 mTimer.cancel();
             }
         }
+    }
 
-    };
 
     @Override
     public void onDestroy() {

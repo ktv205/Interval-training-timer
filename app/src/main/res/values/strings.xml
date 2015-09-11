@@ -32,4 +32,6 @@
     <string name="is_paused">is paused</string>
     <string name="STATE">timer state</string>
     <string name="state">timer state</string>
+    <string name="finished">finished</string>
+    <string name="start_again">start again</string>
 </resources>
