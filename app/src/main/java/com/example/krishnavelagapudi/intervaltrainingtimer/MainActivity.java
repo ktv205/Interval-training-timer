@@ -2,6 +2,7 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
@@ -14,7 +15,8 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     private static final String VARYING_TIMES_FRAGMENT_TAG = "varying times";
     private static final String REVIEW_FRAGMENT_TAG = "review workout";
     private static final String TIMER_FRAGMENT_TAG = "timer fragment";
-    private ArrayList<WorkoutModel> workoutModelList = new ArrayList<>();
+    private static final String TAG = MainActivity.class.getSimpleName();
+    private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private int nTimes;
     private int count = 0;
 
@@ -30,7 +32,9 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                 if (varyingTimesFragment == null) {
                     varyingTimesFragment = new VaryingTimesFragment();
                 }
-                getFragmentManager().beginTransaction().replace(R.id.frame_container, varyingTimesFragment, VARYING_TIMES_FRAGMENT_TAG).commit();
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.frame_container, varyingTimesFragment, VARYING_TIMES_FRAGMENT_TAG)
+                        .commit();
             }
         }
     }
@@ -41,14 +45,18 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         if (workoutName.isEmpty()) {
             workoutName = "Workout Name Here";
         }
-        workoutModelList.add(new WorkoutModel(workoutName, minutes, seconds));
+        mWorkoutModelArrayList.add(new WorkoutModel(workoutName, minutes, seconds));
         count++;
         if (count == nTimes) {
             ReviewFragment reviewFragment = new ReviewFragment();
             Bundle bundle = new Bundle();
-            bundle.putParcelableArrayList(getString(R.string.workout_key), workoutModelList);
+            bundle.putParcelableArrayList(getString(R.string.workout_key), mWorkoutModelArrayList);
             reviewFragment.setArguments(bundle);
-            getFragmentManager().beginTransaction().replace(R.id.frame_container, reviewFragment, REVIEW_FRAGMENT_TAG).commit();
+            getFragmentManager().beginTransaction()
+                    .replace(R.id.frame_container, reviewFragment, REVIEW_FRAGMENT_TAG)
+                    .addToBackStack(ReviewFragment.class.getSimpleName())
+                    .commit();
+            count = 0;
         }
 
     }
@@ -65,10 +73,13 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     public void onNumberPicked(int number, int key) {
         nTimes = number;
         if (key == getResources().getInteger(R.integer.workout_number)) {
-            for (int i = 0; i < number; i++) {
+            mWorkoutModelArrayList.clear();
+            Log.d(TAG, "here in the workout number");
+            for (int i = number; i > 0; i--) {
                 TimePickerDialog timePickerDialog = new TimePickerDialog();
                 Bundle bundle = new Bundle();
                 bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_picker));
+                bundle.putInt(getString(R.string.exercise_number), i);
                 timePickerDialog.setArguments(bundle);
                 timePickerDialog.show(getFragmentManager(), TIME_DIALOG);
             }
@@ -87,6 +98,17 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         bundle.putInt(getString(R.string.repeat_times), number);
         TimerFragment timerFragment = new TimerFragment();
         timerFragment.setArguments(bundle);
-        getFragmentManager().beginTransaction().replace(R.id.frame_container, timerFragment, TIMER_FRAGMENT_TAG).commit();
+        getFragmentManager().beginTransaction()
+                .replace(R.id.frame_container, timerFragment, TIMER_FRAGMENT_TAG)
+                .commit();
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (getFragmentManager().getBackStackEntryCount() > 0) {
+            getFragmentManager().popBackStack();
+        } else {
+            super.onBackPressed();
+        }
     }
 }

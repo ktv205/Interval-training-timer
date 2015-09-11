@@ -2,14 +2,19 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 
 import android.app.Activity;
 import android.app.DialogFragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -48,10 +53,23 @@ public class TimePickerDialog extends DialogFragment {
         final NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
         final NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
         final EditText editText = (EditText) view.findViewById(R.id.label_edit_text);
+        final Button okButton = (Button) view.findViewById(R.id.ok_button);
+        editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                if (actionId == EditorInfo.IME_ACTION_DONE) {
+                    InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    imm.hideSoftInputFromWindow(view.getWindowToken(), 0);
+                    okButton.performClick();
+                    return true;
+                }
+                return false;
+            }
+        });
         setMinMaxForPicker(minutePicker, 0, 60);
         setMinMaxForPicker(secondPicker, 0, 59);
         if (key == getResources().getInteger(R.integer.time_picker)) {
-            getDialog().setTitle(getString(R.string.time_picker));
+            getDialog().setTitle(getString(R.string.time_picker) + " " + getArguments().getInt(getString(R.string.exercise_number)));
         } else {
             getDialog().setTitle(getString(R.string.change_title));
             WorkoutModel workoutModel = getArguments().getParcelable(getString(R.string.workout_key));
@@ -59,8 +77,6 @@ public class TimePickerDialog extends DialogFragment {
             secondPicker.setValue(workoutModel.getSec());
             editText.setText(workoutModel.getWorkoutName());
         }
-        Button okButton = (Button) view.findViewById(R.id.ok_button);
-
 
         okButton.setOnClickListener(new View.OnClickListener() {
             @Override

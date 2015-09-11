@@ -34,4 +34,5 @@
     <string name="state">timer state</string>
     <string name="finished">finished</string>
     <string name="start_again">start again</string>
+    <string name="exercise_number">exersice number</string>
 </resources>

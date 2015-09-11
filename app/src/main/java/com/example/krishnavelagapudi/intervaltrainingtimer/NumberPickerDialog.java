@@ -37,9 +37,9 @@ public class NumberPickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_number_picker, container, false);
-        if(getArguments().getInt(getString(R.string.select_workout_number))==getResources().getInteger(R.integer.workout_number)){
+        if (getArguments().getInt(getString(R.string.select_workout_number)) == getResources().getInteger(R.integer.workout_number)) {
             getDialog().setTitle(getString(R.string.workouts_title));
-        }else{
+        } else {
             getDialog().setTitle(getString(R.string.repeat_times_title));
         }
 

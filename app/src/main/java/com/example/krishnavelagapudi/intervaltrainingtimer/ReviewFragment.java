@@ -1,13 +1,16 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
 import android.app.Fragment;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -52,7 +55,17 @@ public class ReviewFragment extends Fragment {
         mRecyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
         mRecyclerView.setAdapter(new RecyclerViewAdapter(mWorkoutModelArrayList));
         mRepeatButton = (Button) mView.findViewById(R.id.repeat_button);
+        final Button startButton = (Button) mView.findViewById(R.id.start_button);
         final EditText titleEditText = (EditText) mView.findViewById(R.id.title_edit_text);
+        titleEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+            @Override
+            public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(mView.getWindowToken(), 0);
+                startButton.performClick();
+                return true;
+            }
+        });
         mRepeatButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -64,7 +77,7 @@ public class ReviewFragment extends Fragment {
                 numberPickerDialog.show(getFragmentManager(), NUMBER_PICKER_DIALOG_TAG);
             }
         });
-        Button startButton = (Button) mView.findViewById(R.id.start_button);
+
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {

@@ -1,6 +1,7 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
 import android.app.Fragment;
+import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.view.LayoutInflater;
@@ -159,6 +160,11 @@ public class TimerFragment extends Fragment {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
+                    }
+                    if (mTotalTime == 5) {
+                        int resID = getResources().getIdentifier("countdown", "raw", getActivity().getPackageName());
+                        MediaPlayer mediaPlayer = MediaPlayer.create(getActivity(), resID);
+                        mediaPlayer.start();
                     }
 
                 }
