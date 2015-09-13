@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
@@ -38,16 +39,20 @@ public class ReviewFragment extends Fragment {
     private int mNumber = 0;
 
     private OnStartTimerListener mOnStartTimerListener;
+    private CurrentFragmentInterface mCurrentFragmentInterface;
 
     public interface OnStartTimerListener {
-        void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number);
+        void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number,String workoutName);
     }
 
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
         this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
+        this.mCurrentFragmentInterface = (CurrentFragmentInterface) getActivity();
+        mCurrentFragmentInterface.currentFragment(ReviewFragment.class.getSimpleName());
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
@@ -83,7 +88,7 @@ public class ReviewFragment extends Fragment {
             public void onClick(View v) {
                 int value = checkFields(titleEditText);
                 if (value == 0) {
-                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber);
+                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber,titleEditText.getText().toString());
                 } else {
                     String error = null;
                     if (value == TITLE_EMPTY) {

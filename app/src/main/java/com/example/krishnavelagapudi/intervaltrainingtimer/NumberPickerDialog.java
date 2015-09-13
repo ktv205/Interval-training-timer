@@ -17,6 +17,7 @@ public class NumberPickerDialog extends DialogFragment {
 
 
     private OnNumberPickedListener mOnNumberPickedListener;
+    private int mNumber=1;
 
     public interface OnNumberPickedListener {
         void onNumberPicked(int number, int key);
@@ -52,7 +53,17 @@ public class NumberPickerDialog extends DialogFragment {
                 return String.format("%02d", i);
             }
         });
+        if(savedInstanceState!=null){
+            mNumber=savedInstanceState.getInt(getString(R.string.exercise_number));
+            numberPicker.setValue(mNumber);
+        }
         Button button = (Button) view.findViewById(R.id.ok_button);
+        numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mNumber=numberPicker.getValue();
+            }
+        });
         final int key = getArguments().getInt(getString(R.string.select_workout_number));
         button.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,5 +76,9 @@ public class NumberPickerDialog extends DialogFragment {
         return view;
     }
 
-
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(getString(R.string.exercise_number),mNumber);
+        super.onSaveInstanceState(outState);
+    }
 }

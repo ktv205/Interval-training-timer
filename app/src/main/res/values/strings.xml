@@ -9,8 +9,8 @@
     <string name="cancel">cancel</string>
     <string name="minutes">Minutes</string>
     <string name="seconds">Seconds</string>
-    <string name="time_picker">Create the workout</string>
-    <string name="label">Workout name</string>
+    <string name="time_picker">Exercise</string>
+    <string name="label">Exercise name</string>
     <string name="repeat_times">Repeat Times</string>
     <string name="pick_a_name">Give a name for this interval training</string>
     <string name="start">start</string>
@@ -35,4 +35,9 @@
     <string name="finished">finished</string>
     <string name="start_again">start again</string>
     <string name="exercise_number">exersice number</string>
+    <string name="exercise_empty">Please provide exercise name</string>
+    <string name="review">Review Workout</string>
+    <string name="fragment_added">is fragment added</string>
+    <string name="current_count">current count</string>
+    <string name="current_fragment">current fragment</string>
 </resources>

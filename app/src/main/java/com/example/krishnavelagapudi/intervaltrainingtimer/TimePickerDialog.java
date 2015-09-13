@@ -5,6 +5,8 @@ import android.app.DialogFragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -26,7 +28,10 @@ import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 public class TimePickerDialog extends DialogFragment {
     private static final int WORKOUT_FIELD_EMPTY = 1;
     private static final int TIME_FIELD_EMPTY = 2;
+    private static final String TAG = TimePickerDialog.class.getSimpleName();
     private OnTimePickedListener mOnTimePickedListener;
+    private int mMin = 0;
+    private int mSec = 0;
 
     public interface OnTimePickedListener {
         void onTimePicked(String workoutName, int minutes, int seconds);
@@ -66,8 +71,27 @@ public class TimePickerDialog extends DialogFragment {
                 return false;
             }
         });
-        setMinMaxForPicker(minutePicker, 0, 60);
-        setMinMaxForPicker(secondPicker, 0, 59);
+        if (savedInstanceState != null) {
+            Log.d(TAG, "herer in savedInstance not null");
+            mMin = savedInstanceState.getInt(getString(R.string.minutes));
+            mSec = savedInstanceState.getInt(getString(R.string.seconds));
+        }
+        setMinMaxForPicker(minutePicker, 0, 60, mMin);
+        setMinMaxForPicker(secondPicker, 0, 59, mSec);
+        minutePicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mMin = newVal;
+            }
+        });
+        secondPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
+                mSec = newVal;
+                Log.d(TAG, "value->" + newVal);
+            }
+        });
+
         if (key == getResources().getInteger(R.integer.time_picker)) {
             getDialog().setTitle(getString(R.string.time_picker) + " " + getArguments().getInt(getString(R.string.exercise_number)));
         } else {
@@ -88,6 +112,8 @@ public class TimePickerDialog extends DialogFragment {
                 int value = checkFields(editText, minutePicker, secondPicker);
                 String error = null;
                 if (value == WORKOUT_FIELD_EMPTY) {
+                    editText.setHint(getString(R.string.exercise_empty));
+                    editText.setHintTextColor(ContextCompat.getColor(getActivity(), android.R.color.holo_red_dark));
                     error = "Please enter a name for the exercise";
                 } else if (value == TIME_FIELD_EMPTY) {
                     error = "Please enter the time for the exercise";
@@ -114,6 +140,13 @@ public class TimePickerDialog extends DialogFragment {
         return view;
     }
 
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putInt(getString(R.string.minutes), mMin);
+        outState.putInt(getString(R.string.seconds), mSec);
+        super.onSaveInstanceState(outState);
+    }
+
     private int checkFields(EditText editText, NumberPicker min, NumberPicker sec) {
         int value = 0;
         if (editText.getText().toString().isEmpty()) {
@@ -124,7 +157,7 @@ public class TimePickerDialog extends DialogFragment {
         return value;
     }
 
-    private void setMinMaxForPicker(NumberPicker picker, int min, int max) {
+    private void setMinMaxForPicker(NumberPicker picker, int min, int max, int value) {
         picker.setMinValue(min);
         picker.setMaxValue(max);
         picker.setFormatter(new NumberPicker.Formatter() {
@@ -133,5 +166,6 @@ public class TimePickerDialog extends DialogFragment {
                 return String.format("%02d", i);
             }
         });
+        picker.setValue(value);
     }
 }

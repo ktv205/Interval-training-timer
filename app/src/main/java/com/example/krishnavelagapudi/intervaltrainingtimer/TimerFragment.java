@@ -4,6 +4,8 @@ import android.app.Fragment;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,10 +38,14 @@ public class TimerFragment extends Fragment {
     private TextView mSetsTextView;
     boolean mIsFinished = false;
     private Button mPauseResumeButton;
+    private CurrentFragmentInterface mCurrentFragmentInterface;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG, "oncreate");
+        this.mCurrentFragmentInterface = (CurrentFragmentInterface) getActivity();
+        mCurrentFragmentInterface.currentFragment(TimerFragment.class.getSimpleName());
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
         mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);
@@ -58,8 +64,10 @@ public class TimerFragment extends Fragment {
             mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.state), mPauseResumeFlag);
             mTotalSets = getArguments().getInt(getString(R.string.repeat_times));
             mSetsTextView.setText("Set " + (mTotalSets - mRepeatTimes));
-
         }
+        ((AppCompatActivity) getActivity())
+                .getSupportActionBar()
+                .setTitle(getArguments().getString(getString(R.string.workout_title)));
 
 
         mPauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
@@ -192,6 +200,9 @@ public class TimerFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        mTimer.cancel();
+        Log.d(TAG,"onDestroy");
+        if(mTimer!=null) {
+            mTimer.cancel();
+        }
     }
 }
