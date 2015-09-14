@@ -38,14 +38,11 @@ public class TimerFragment extends Fragment {
     private TextView mSetsTextView;
     boolean mIsFinished = false;
     private Button mPauseResumeButton;
-    private CurrentFragmentInterface mCurrentFragmentInterface;
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.d(TAG, "oncreate");
-        this.mCurrentFragmentInterface = (CurrentFragmentInterface) getActivity();
-        mCurrentFragmentInterface.currentFragment(TimerFragment.class.getSimpleName());
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
         mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);

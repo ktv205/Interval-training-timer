@@ -11,13 +11,13 @@ import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NumberPickerDialog.OnNumberPickedListener,
-        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, FragmentManager.OnBackStackChangedListener, CurrentFragmentInterface {
+        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener{
 
     private static final String TIME_DIALOG = "time dialog";
     private static final String TAG = MainActivity.class.getSimpleName();
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private int mTimes;
-    private int mCount = 0;
+    private int mCount = 1;
     private String mCurrentFragment;
 
     @Override
@@ -46,9 +46,19 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
 
         }
-        getFragmentManager().addOnBackStackChangedListener(this);
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        Log.d(TAG,"herer in onResume");
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        Log.d(TAG, "onPause");
+    }
 
     @Override
     protected void onSaveInstanceState(Bundle outState) {
@@ -66,7 +76,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
             workoutName = "Workout Name Here";
         }
         mWorkoutModelArrayList.add(new WorkoutModel(workoutName, minutes, seconds));
-        mCount++;
+
         if (mCount == mTimes) {
             ReviewFragment reviewFragment = new ReviewFragment();
             Bundle bundle = new Bundle();
@@ -76,7 +86,10 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                     .replace(R.id.frame_container, reviewFragment, ReviewFragment.class.getSimpleName())
                     .addToBackStack(VaryingTimesFragment.class.getSimpleName())
                     .commit();
-            mCount = 0;
+            mCount = 1;
+        } else {
+            mCount++;
+            startTimePickerDialog();
         }
 
     }
@@ -89,26 +102,29 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         }
     }
 
+
     @Override
     public void onNumberPicked(int number, int key) {
         mTimes = number;
         if (key == getResources().getInteger(R.integer.workout_number)) {
             mWorkoutModelArrayList.clear();
-            Log.d(TAG, "here in the workout number");
-            for (int i = number; i > 0; i--) {
-                TimePickerDialog timePickerDialog = new TimePickerDialog();
-                Bundle bundle = new Bundle();
-                bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_picker));
-                bundle.putInt(getString(R.string.exercise_number), i);
-                timePickerDialog.setArguments(bundle);
-                timePickerDialog.show(getFragmentManager(), TIME_DIALOG);
-            }
+            mCount=1;
+            startTimePickerDialog();
         } else {
             ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(ReviewFragment.class.getSimpleName());
             if (reviewFragment != null) {
                 reviewFragment.updateRepeatTimes(number);
             }
         }
+    }
+
+    private void startTimePickerDialog() {
+        TimePickerDialog timePickerDialog = new TimePickerDialog();
+        Bundle bundle = new Bundle();
+        bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_picker));
+        bundle.putInt(getString(R.string.exercise_number), mCount);
+        timePickerDialog.setArguments(bundle);
+        timePickerDialog.show(getFragmentManager(), TIME_DIALOG);
     }
 
     @Override
@@ -134,16 +150,4 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         }
     }
 
-    /**
-     * Called whenever the contents of the back stack change.
-     */
-    @Override
-    public void onBackStackChanged() {
-        Log.d(TAG, "backstack changed");
-    }
-
-    @Override
-    public void currentFragment(String tag) {
-        mCurrentFragment = tag;
-    }
 }

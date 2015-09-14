@@ -3,6 +3,7 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -17,6 +18,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -29,9 +31,11 @@ public class TimePickerDialog extends DialogFragment {
     private static final int WORKOUT_FIELD_EMPTY = 1;
     private static final int TIME_FIELD_EMPTY = 2;
     private static final String TAG = TimePickerDialog.class.getSimpleName();
+
     private OnTimePickedListener mOnTimePickedListener;
     private int mMin = 0;
     private int mSec = 0;
+
 
     public interface OnTimePickedListener {
         void onTimePicked(String workoutName, int minutes, int seconds);
@@ -54,11 +58,11 @@ public class TimePickerDialog extends DialogFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.dialog_time_picker, container, false);
         final int key = getArguments().getInt(getString(R.string.time_picker_key));
-
         final NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
         final NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
         final EditText editText = (EditText) view.findViewById(R.id.label_edit_text);
         final Button okButton = (Button) view.findViewById(R.id.ok_button);
+        setCancelable(false);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
@@ -140,11 +144,12 @@ public class TimePickerDialog extends DialogFragment {
         return view;
     }
 
-    @Override
+
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(getString(R.string.minutes), mMin);
         outState.putInt(getString(R.string.seconds), mSec);
         super.onSaveInstanceState(outState);
+
     }
 
     private int checkFields(EditText editText, NumberPicker min, NumberPicker sec) {
@@ -168,4 +173,6 @@ public class TimePickerDialog extends DialogFragment {
         });
         picker.setValue(value);
     }
+
+
 }

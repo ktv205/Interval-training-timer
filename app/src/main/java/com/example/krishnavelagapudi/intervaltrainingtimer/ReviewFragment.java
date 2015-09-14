@@ -39,7 +39,6 @@ public class ReviewFragment extends Fragment {
     private int mNumber = 0;
 
     private OnStartTimerListener mOnStartTimerListener;
-    private CurrentFragmentInterface mCurrentFragmentInterface;
 
     public interface OnStartTimerListener {
         void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number,String workoutName);
@@ -51,8 +50,6 @@ public class ReviewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
         this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
-        this.mCurrentFragmentInterface = (CurrentFragmentInterface) getActivity();
-        mCurrentFragmentInterface.currentFragment(ReviewFragment.class.getSimpleName());
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
