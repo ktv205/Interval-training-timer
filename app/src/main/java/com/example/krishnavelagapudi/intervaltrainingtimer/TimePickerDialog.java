@@ -3,7 +3,6 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 import android.app.Activity;
 import android.app.DialogFragment;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
@@ -18,7 +17,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.NumberPicker;
 import android.widget.TextView;
-import android.widget.TimePicker;
 import android.widget.Toast;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -103,7 +101,7 @@ public class TimePickerDialog extends DialogFragment {
             WorkoutModel workoutModel = getArguments().getParcelable(getString(R.string.workout_key));
             minutePicker.setValue(workoutModel.getMin());
             secondPicker.setValue(workoutModel.getSec());
-            editText.setText(workoutModel.getWorkoutName());
+            editText.setText(workoutModel.getExerciseName());
         }
 
         okButton.setOnClickListener(new View.OnClickListener() {

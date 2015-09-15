@@ -40,4 +40,7 @@
     <string name="fragment_added">is fragment added</string>
     <string name="current_count">current count</string>
     <string name="current_fragment">current fragment</string>
+    <string name="exercise_name">exercise name</string>
+    <string name="time">time</string>
+    <string name="current_set">current set</string>
 </resources>

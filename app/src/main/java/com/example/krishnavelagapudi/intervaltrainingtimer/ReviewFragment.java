@@ -119,7 +119,7 @@ public class ReviewFragment extends Fragment {
                 + String.format("%02d", workoutModel.getSec()) + " minutes";
         TimeTextView.setText(time);
         TextView titleTextView = (TextView) view.findViewById(R.id.title_text_view);
-        titleTextView.setText(workoutModel.getWorkoutName());
+        titleTextView.setText(workoutModel.getExerciseName());
         mWorkoutModelArrayList.remove(position);
         mWorkoutModelArrayList.add(position, workoutModel);
     }
@@ -127,7 +127,7 @@ public class ReviewFragment extends Fragment {
     public void updateRepeatTimes(int number) {
         mNumber = number;
         if (number == 1) {
-            mRepeatButton.setText("Dont repeat");
+            mRepeatButton.setText("Don't repeat");
         } else {
             mRepeatButton.setText("Repeat " + number + " times");
         }
@@ -154,7 +154,7 @@ public class ReviewFragment extends Fragment {
             String time = String.format("%02d", mWorkoutModelList.get(i).getMin()) + ":"
                     + String.format("%02d", mWorkoutModelList.get(i).getSec()) + " minutes";
             viewHolder.timeTextView.setText(time);
-            viewHolder.workoutTextView.setText(mWorkoutModelList.get(i).getWorkoutName());
+            viewHolder.workoutTextView.setText(mWorkoutModelList.get(i).getExerciseName());
             viewHolder.changeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {

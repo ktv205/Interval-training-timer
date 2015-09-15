@@ -8,13 +8,10 @@ import android.os.Parcelable;
  */
 public class WorkoutModel implements Parcelable {
 
-    String exerciceName;
+    String exerciseName;
     int min;
     int sec;
 
-    public String getWorkoutName() {
-        return exerciceName;
-    }
 
     public int getMin() {
         return min;
@@ -24,14 +21,14 @@ public class WorkoutModel implements Parcelable {
         return sec;
     }
 
-    public WorkoutModel(String workoutName, int min, int sec) {
-        this.exerciceName = workoutName;
+    public WorkoutModel(String exerciseName, int min, int sec) {
+        this.exerciseName = exerciseName;
         this.min = min;
         this.sec = sec;
     }
 
     protected WorkoutModel(Parcel in) {
-        exerciceName = in.readString();
+        exerciseName = in.readString();
         min = in.readInt();
         sec = in.readInt();
     }
@@ -55,11 +52,13 @@ public class WorkoutModel implements Parcelable {
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-        dest.writeString(exerciceName);
+        dest.writeString(exerciseName);
         dest.writeInt(min);
         dest.writeInt(sec);
     }
 
 
-
+    public String getExerciseName() {
+        return exerciseName;
+    }
 }
