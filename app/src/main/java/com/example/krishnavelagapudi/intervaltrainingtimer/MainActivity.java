@@ -11,7 +11,7 @@ import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NumberPickerDialog.OnNumberPickedListener,
-        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener{
+        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener {
 
     private static final String TIME_DIALOG = "time dialog";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -28,30 +28,42 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                 .findFragmentByTag(VaryingTimesFragment.class.getSimpleName());
         ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(ReviewFragment.class.getSimpleName());
         TimerFragment timerFragment = (TimerFragment) getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName());
-        if (savedInstanceState == null) {
-            if (varyingTimesFragment == null) {
-                varyingTimesFragment = new VaryingTimesFragment();
+        if (getIntent().getExtras() != null) {
+            if (timerFragment == null) {
+                timerFragment = new TimerFragment();
+                Bundle bundle = new Bundle();
+                bundle.putParcelableArrayList(getString(R.string.workout_key), getIntent().getParcelableArrayListExtra(getString(R.string.workout_key)));
+                bundle.putInt(getString(R.string.repeat_times), getIntent().getIntExtra(getString(R.string.repeat_times),0));
+                bundle.putString(getString(R.string.workout_title), getIntent().getStringExtra(getString(R.string.workout_title)));
+                timerFragment.setArguments(bundle);
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.frame_container, timerFragment, TimerFragment.class.getSimpleName())
+                        .commit();
             }
-            getFragmentManager().beginTransaction()
-                    .replace(R.id.frame_container, varyingTimesFragment, VaryingTimesFragment.class.getSimpleName())
-                    .commit();
-            mCurrentFragment = VaryingTimesFragment.class.getSimpleName();
-        } else {
-            mCount = savedInstanceState.getInt(getString(R.string.current_count));
-            mTimes = savedInstanceState.getInt(getString(R.string.exercise_number));
-            mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_key));
-            String tag = savedInstanceState.getString(getString(R.string.current_fragment));
+        }else {
+            if (savedInstanceState == null) {
+                if (varyingTimesFragment == null) {
+                    varyingTimesFragment = new VaryingTimesFragment();
+                }
+                getFragmentManager().beginTransaction()
+                        .replace(R.id.frame_container, varyingTimesFragment, VaryingTimesFragment.class.getSimpleName())
+                        .commit();
+                mCurrentFragment = VaryingTimesFragment.class.getSimpleName();
+            } else {
+                mCount = savedInstanceState.getInt(getString(R.string.current_count));
+                mTimes = savedInstanceState.getInt(getString(R.string.exercise_number));
+                mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_key));
+                String tag = savedInstanceState.getString(getString(R.string.current_fragment));
 
-            Fragment fragment = getFragmentManager().findFragmentByTag(tag);
-
-
+                Fragment fragment = getFragmentManager().findFragmentByTag(tag);
+            }
         }
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        Log.d(TAG,"herer in onResume");
+        Log.d(TAG, "herer in onResume");
     }
 
     @Override
@@ -108,7 +120,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         mTimes = number;
         if (key == getResources().getInteger(R.integer.workout_number)) {
             mWorkoutModelArrayList.clear();
-            mCount=1;
+            mCount = 1;
             startTimePickerDialog();
         } else {
             ReviewFragment reviewFragment = (ReviewFragment) getFragmentManager().findFragmentByTag(ReviewFragment.class.getSimpleName());
@@ -144,7 +156,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     @Override
     public void onBackPressed() {
         if (getFragmentManager().getBackStackEntryCount() > 0) {
-            getFragmentManager().popBackStack(VaryingTimesFragment.class.getSimpleName(),FragmentManager.POP_BACK_STACK_INCLUSIVE);
+            getFragmentManager().popBackStack(VaryingTimesFragment.class.getSimpleName(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
         } else {
             super.onBackPressed();
         }

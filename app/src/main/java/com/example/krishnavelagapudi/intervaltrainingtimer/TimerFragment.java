@@ -128,15 +128,18 @@ public class TimerFragment extends Fragment {
 
     }
 
-
     @Override
-    public void onStop() {
-        super.onStop();
+    public void onPause() {
+        super.onPause();
+        Log.d(TAG, "onStop");
         if (mBound) {
+            mService.stopMessages(true);
             getActivity().unbindService(mConnection);
             mBound = false;
         }
+
     }
+
 
     @Override
     public void onDestroy() {
@@ -150,7 +153,9 @@ public class TimerFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
+            Log.d(TAG,"onServiceConnected");
             mService = binder.getService();
+            mService.stopMessages(false);
             mBound = true;
             mService.setMessenger(mMessenger);
             if (!mService.isTimerRunning()) {

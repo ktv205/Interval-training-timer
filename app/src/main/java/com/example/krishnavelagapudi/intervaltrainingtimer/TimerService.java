@@ -1,12 +1,16 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
+import android.annotation.TargetApi;
 import android.app.Notification;
 import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.app.TaskStackBuilder;
 import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Message;
@@ -26,8 +30,6 @@ import java.util.TimerTask;
  * Created by krishnavelagapudi on 9/14/15.
  */
 public class TimerService extends Service {
-
-
     private static final String TAG = TimerService.class.getSimpleName();
     private static final int STOP = 2;
     private final IBinder mBinder = new TimerBinder();
@@ -44,6 +46,7 @@ public class TimerService extends Service {
     NotificationManager mNotificationManager;
     NotificationCompat.Builder mBuilder;
     private int mNumMessages;
+    private boolean stopFlag = false;
 
     @Nullable
     @Override
@@ -63,6 +66,11 @@ public class TimerService extends Service {
             return false;
         }
         return true;
+    }
+
+    public void stopMessages(boolean b) {
+        stopFlag = b;
+
     }
 
     public class TimerBinder extends Binder {
@@ -99,6 +107,7 @@ public class TimerService extends Service {
         initTimer();
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void startNotificationBuilder() {
         mBuilder =
                 new NotificationCompat.Builder(this)
@@ -179,7 +188,7 @@ public class TimerService extends Service {
                 mPauseResumeFlag = STOP;
                 mTimer.cancel();
                 mTimer = null;
-                initFields();
+                stopSelf();
             }
         }
     }
@@ -188,35 +197,52 @@ public class TimerService extends Service {
         mNotificationManager.cancel(0);
     }
 
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void updateNotification(String time, String exerciseName, int mRepeatTimes) {
         mBuilder.setContentTitle(mWorkoutName + " " + "set " + mRepeatTimes + " " + exerciseName)
                 .setContentText(time);
+        Intent intent = new Intent(this, MainActivity.class);
+        intent.putExtra(getString(R.string.workout_key), mWorkoutModelArrayList);
+        intent.putExtra(getString(R.string.repeat_times), mTotalSets);
+        intent.putExtra(getString(R.string.workout_title), mWorkoutName);
+        intent.putExtra(getString(R.string.current_fragment), TimerFragment.class.getSimpleName());
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(intent);
+        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+        mBuilder.setContentIntent(pendingIntent);
         Notification notification = mBuilder.build();
         notification.flags = Notification.FLAG_ONGOING_EVENT;
         mNotificationManager.notify(0, notification);
     }
 
     private void sendTime(String time, int totalTime) throws RemoteException {
-        Message message = new Message();
-        Bundle bundle = new Bundle();
-        bundle.putString(getString(R.string.time), time);
-        message.arg2 = totalTime;
-        message.setData(bundle);
-        mMessenger.send(message);
+        if (!stopFlag) {
+            Message message = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putString(getString(R.string.time), time);
+            message.arg2 = totalTime;
+            message.setData(bundle);
+            mMessenger.send(message);
+        }
     }
 
     private void sendExerciseName(String exerciseName) throws RemoteException {
-        Message message = new Message();
-        Bundle bundle = new Bundle();
-        bundle.putString(getString(R.string.exercise_name), exerciseName);
-        message.setData(bundle);
-        mMessenger.send(message);
+        if (!stopFlag) {
+            Message message = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putString(getString(R.string.exercise_name), exerciseName);
+            message.setData(bundle);
+            mMessenger.send(message);
+        }
     }
 
     private void sendWorkoutNumber(int i) throws RemoteException {
-        Message message = new Message();
-        message.arg1 = i;
-        mMessenger.send(message);
+        if (!stopFlag) {
+            Message message = new Message();
+            message.arg1 = i;
+            mMessenger.send(message);
+        }
     }
 
 
