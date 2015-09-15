@@ -81,6 +81,8 @@ public class TimerFragment extends Fragment {
         mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
         if (mPauseResumeFlag == PAUSE) {
             mPauseResumeButton.setText(R.string.resume);
+        }else if(mPauseResumeFlag==STOP){
+            mPauseResumeButton.setText(getString(R.string.start_again));
         }
         mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -175,7 +177,7 @@ public class TimerFragment extends Fragment {
                 if (msg.arg1 == -1) {
                     mPauseResumeFlag = STOP;
                     mIsFinished = true;
-                    mPauseResumeButton.setText("Start Again");
+                    mPauseResumeButton.setText(getString(R.string.start_again));
                 }
             }
             Bundle bundle = msg.getData();

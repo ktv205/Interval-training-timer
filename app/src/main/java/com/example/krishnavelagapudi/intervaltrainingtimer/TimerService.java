@@ -1,6 +1,9 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Binder;
@@ -10,6 +13,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -31,13 +35,15 @@ public class TimerService extends Service {
     private String mWorkoutName;
     private int mExerciseNumber;
     private int mTotalSets;
-    final static int PAUSE = 0;
     final static int RESUME = 1;
     int mPauseResumeFlag = RESUME;
     private Timer mTimer;
     Messenger mMessenger;
     private int mTotalTime;
     private int mRepeatTimes;
+    NotificationManager mNotificationManager;
+    NotificationCompat.Builder mBuilder;
+    private int mNumMessages;
 
     @Nullable
     @Override
@@ -48,11 +54,12 @@ public class TimerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "service started");
+        startNotificationBuilder();
         return START_NOT_STICKY;
     }
 
     public boolean isTimerRunning() {
-        if(mTimer==null){
+        if (mTimer == null) {
             return false;
         }
         return true;
@@ -70,8 +77,8 @@ public class TimerService extends Service {
         Log.d(TAG, "onDestroy");
     }
 
-    public void setMessenger(Messenger messenger){
-        mMessenger=messenger;
+    public void setMessenger(Messenger messenger) {
+        mMessenger = messenger;
     }
 
     public void setWorkoutArrayList(ArrayList<WorkoutModel> workoutArrayList, String workoutName, int totalSets) {
@@ -82,14 +89,23 @@ public class TimerService extends Service {
     }
 
     private void initFields() {
-        mTotalTime=-1;
-        mRepeatTimes=mTotalSets;
-        mExerciseNumber=1;
+        mTotalTime = -1;
+        mRepeatTimes = mTotalSets;
+        mExerciseNumber = 1;
     }
 
     public void pauseResumeTimer(int pauseResumeFlag) {
         mPauseResumeFlag = pauseResumeFlag;
         initTimer();
+    }
+
+    private void startNotificationBuilder() {
+        mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.timer);
+        mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        mNumMessages = 0;
     }
 
     private void initTimer() {
@@ -111,14 +127,6 @@ public class TimerService extends Service {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-                /*if (getActivity() != null) {
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mSetsTextView.setText("Set " + (mTotalSets - mRepeatTimes));
-                        }
-                    });
-                }*/
             }
             while (mExerciseNumber <= mWorkoutModelArrayList.size()) {
                 final WorkoutModel workoutModel = mWorkoutModelArrayList.get(mExerciseNumber - 1);
@@ -127,14 +135,6 @@ public class TimerService extends Service {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-               /* if (getActivity() != null) {
-                    getActivity().runOnUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            mTitleTextView.setText(workoutModel.getExerciseName());
-                        }
-                    });
-                }*/
                 if (mTotalTime == -1) {
                     if (workoutModel.getMin() > 0) {
                         mTotalTime = workoutModel.getMin() * 60;
@@ -145,20 +145,12 @@ public class TimerService extends Service {
                     if (mPauseResumeFlag == RESUME) {
                         final String time = String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60));
                         try {
-                            sendTime(time,mTotalTime);
+                            sendTime(time, mTotalTime);
+                            updateNotification(time, workoutModel.getExerciseName(), mTotalSets - mRepeatTimes);
                             mTotalTime--;
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
-                        /*if (getActivity() != null) {
-                            getActivity().runOnUiThread(new Runnable() {
-                                @Override
-                                public void run() {
-                                    mTimeTextView.setText(time);
-                                }
-                            });
-                            mTotalTime--;
-                        }*/
                     }
                     try {
                         Thread.sleep(1000);
@@ -183,42 +175,47 @@ public class TimerService extends Service {
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }
-                /*mIsFinished = true;
-                getActivity().runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPauseResumeButton.setText(getString(R.string.start_again));
-                    }
-                });*/
-
+                removeNotification();
                 mPauseResumeFlag = STOP;
                 mTimer.cancel();
-                mTimer=null;
+                mTimer = null;
                 initFields();
             }
         }
     }
 
-    private void sendTime(String time,int totalTime) throws RemoteException {
-        Message message=new Message();
-        Bundle bundle=new Bundle();
-        bundle.putString(getString(R.string.time),time);
-        message.arg2=totalTime;
+    private void removeNotification() {
+        mNotificationManager.cancel(0);
+    }
+
+    private void updateNotification(String time, String exerciseName, int mRepeatTimes) {
+        mBuilder.setContentTitle(mWorkoutName + " " + "set " + mRepeatTimes + " " + exerciseName)
+                .setContentText(time);
+        Notification notification = mBuilder.build();
+        notification.flags = Notification.FLAG_ONGOING_EVENT;
+        mNotificationManager.notify(0, notification);
+    }
+
+    private void sendTime(String time, int totalTime) throws RemoteException {
+        Message message = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putString(getString(R.string.time), time);
+        message.arg2 = totalTime;
         message.setData(bundle);
         mMessenger.send(message);
     }
 
     private void sendExerciseName(String exerciseName) throws RemoteException {
-        Message message=new Message();
-        Bundle bundle=new Bundle();
-        bundle.putString(getString(R.string.exercise_name),exerciseName);
+        Message message = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putString(getString(R.string.exercise_name), exerciseName);
         message.setData(bundle);
         mMessenger.send(message);
     }
 
     private void sendWorkoutNumber(int i) throws RemoteException {
-        Message message=new Message();
-        message.arg1=i;
+        Message message = new Message();
+        message.arg1 = i;
         mMessenger.send(message);
     }
 
