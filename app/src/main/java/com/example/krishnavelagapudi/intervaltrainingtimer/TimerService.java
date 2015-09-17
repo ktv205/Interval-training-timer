@@ -58,6 +58,7 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "service started");
         startNotificationBuilder();
+        Log.d(TAG,"size->"+mWorkoutModelArrayList.size());
         return START_NOT_STICKY;
     }
 
@@ -82,6 +83,7 @@ public class TimerService extends Service {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        mNotificationManager.cancel(0);
         Log.d(TAG, "onDestroy");
     }
 
@@ -187,6 +189,7 @@ public class TimerService extends Service {
                 removeNotification();
                 mPauseResumeFlag = STOP;
                 mTimer.cancel();
+
                 mTimer = null;
                 stopSelf();
             }
@@ -206,6 +209,7 @@ public class TimerService extends Service {
         intent.putExtra(getString(R.string.repeat_times), mTotalSets);
         intent.putExtra(getString(R.string.workout_title), mWorkoutName);
         intent.putExtra(getString(R.string.current_fragment), TimerFragment.class.getSimpleName());
+        intent.setFlags( Intent.FLAG_ACTIVITY_SINGLE_TOP);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(MainActivity.class);
         stackBuilder.addNextIntent(intent);

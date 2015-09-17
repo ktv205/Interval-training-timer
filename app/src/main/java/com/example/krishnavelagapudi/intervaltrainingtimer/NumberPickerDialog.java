@@ -19,6 +19,15 @@ public class NumberPickerDialog extends DialogFragment {
     private OnNumberPickedListener mOnNumberPickedListener;
     private int mNumber=1;
 
+    public static NumberPickerDialog newInstance() {
+        
+        Bundle args = new Bundle();
+        
+        NumberPickerDialog fragment = new NumberPickerDialog();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     public interface OnNumberPickedListener {
         void onNumberPicked(int number, int key);
     }

@@ -44,6 +44,16 @@ public class TimerFragment extends Fragment {
     private Button mPauseResumeButton;
     private String mExerciseName;
 
+
+    public static TimerFragment newInstance() {
+        
+        Bundle args = new Bundle();
+        
+        TimerFragment fragment = new TimerFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

@@ -17,6 +17,16 @@ public class VaryingTimesFragment extends Fragment {
     private static final java.lang.String NUMBER_DIALOG = "number dialog";
 
 
+    public static VaryingTimesFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        VaryingTimesFragment fragment = new VaryingTimesFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

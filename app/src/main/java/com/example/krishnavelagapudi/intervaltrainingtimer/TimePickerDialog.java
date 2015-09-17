@@ -41,6 +41,15 @@ public class TimePickerDialog extends DialogFragment {
         void onTimePicked(String workoutName, int minutes, int seconds, int position);
     }
 
+    public static TimePickerDialog newInstance() {
+        
+        Bundle args = new Bundle();
+        
+        TimePickerDialog fragment = new TimePickerDialog();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);

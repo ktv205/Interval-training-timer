@@ -41,14 +41,23 @@ public class ReviewFragment extends Fragment {
     private OnStartTimerListener mOnStartTimerListener;
 
     public interface OnStartTimerListener {
-        void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number,String workoutName);
+        void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number, String workoutName);
+    }
+
+    public static ReviewFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        ReviewFragment fragment = new ReviewFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
 
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ((AppCompatActivity)getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
+        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
         this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
@@ -85,7 +94,7 @@ public class ReviewFragment extends Fragment {
             public void onClick(View v) {
                 int value = checkFields(titleEditText);
                 if (value == 0) {
-                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber,titleEditText.getText().toString());
+                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber, titleEditText.getText().toString());
                 } else {
                     String error = null;
                     if (value == TITLE_EMPTY) {
