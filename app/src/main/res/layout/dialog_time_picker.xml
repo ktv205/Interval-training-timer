@@ -50,10 +50,10 @@
     </TableLayout>
 
     <EditText
-        android:id="@+id/label_edit_text"
+        android:id="@+id/exersice_name_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/label"
+        android:hint="@string/exercise_name_hint"
         android:singleLine="true"
         android:imeOptions="actionDone"/>
 

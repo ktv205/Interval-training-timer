@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <integer name="workout_number">0</integer>
-    <integer name="time_picker">0</integer>
-    <integer name="time_changer">1</integer>
-    <integer name="repeat_number">1</integer>
+    <integer name="exercise_number">0</integer>
+    <integer name="pick_time">0</integer>
+    <integer name="set_number">1</integer>
+    <integer name="change_time">1</integer>
+    <integer name="resume">1</integer>
+    <integer name="pause">0</integer>
+    <integer name="stop">2</integer>
 </resources>

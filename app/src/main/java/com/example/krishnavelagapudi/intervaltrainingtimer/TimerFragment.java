@@ -28,15 +28,12 @@ import java.util.ArrayList;
  * Created by krishnavelagapudi on 9/9/15.
  */
 public class TimerFragment extends Fragment {
-    private static final int STOP = 2;
     private static final String TAG = TimerFragment.class.getSimpleName();
     TextView mTimeTextView;
     int mCurrentSet;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private TextView mTitleTextView;
-    final static int PAUSE = 0;
-    final static int RESUME = 1;
-    int mPauseResumeFlag = RESUME;
+    int mPauseResumeFlag=1;
     int mTotalTime;
     int mTotalSets;
     private TextView mSetsTextView;
@@ -45,10 +42,10 @@ public class TimerFragment extends Fragment {
     private String mExerciseName;
 
 
-    public static TimerFragment newInstance() {
-        
-        Bundle args = new Bundle();
-        
+    public static TimerFragment newInstance(Bundle bundle) {
+
+        Bundle args = bundle;
+
         TimerFragment fragment = new TimerFragment();
         fragment.setArguments(args);
         return fragment;
@@ -60,38 +57,46 @@ public class TimerFragment extends Fragment {
         Intent intent = new Intent(getActivity(), TimerService.class);
         if (!isMyServiceRunning(TimerService.class, getActivity())) {
             getActivity().startService(intent);
-        } else {
-            Log.d(TAG, "service running");
         }
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
         mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);
         mSetsTextView = (TextView) view.findViewById(R.id.sets_textView);
-        ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
+        mPauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
+        ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_model));
         mWorkoutModelArrayList = workoutModelArrayList;
+        mWorkoutName = getArguments().getString(getString(R.string.workout_name));
+        ((AppCompatActivity) getActivity())
+                .getSupportActionBar()
+                .setTitle(mWorkoutName);
+        boolean fromNotification = getArguments().getBoolean(getString(R.string.from_notification));
+        if (fromNotification) {
+            mTimeTextView.setText(getArguments().getString(getString(R.string.time)));
+            mPauseResumeFlag = getArguments().getInt(getString(R.string.timer_state));
+            mCurrentSet = getArguments().getInt(getString(R.string.current_set));
+            mTotalSets = getArguments().getInt(getString(R.string.set_number));
+            mExerciseName = getArguments().getString(getString(R.string.exercise_name));
+            mSetsTextView.setText("Set " + (mCurrentSet));
+            mTitleTextView.setText(mExerciseName);
+        } else {
+            mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
+        }
         if (savedInstanceState == null) {
-            mTotalSets = getArguments().getInt(getString(R.string.repeat_times));
+            mTotalSets = getArguments().getInt(getString(R.string.set_number));
         } else {
             mTotalTime = savedInstanceState.getInt(getString(R.string.total_time));
-            mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.state), mPauseResumeFlag);
-            mTotalSets = getArguments().getInt(getString(R.string.repeat_times));
+            mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.timer_state), mPauseResumeFlag);
+            mTotalSets = getArguments().getInt(getString(R.string.set_number));
             mCurrentSet = savedInstanceState.getInt(getString(R.string.current_set));
             mExerciseName = savedInstanceState.getString(getString(R.string.exercise_name));
             mSetsTextView.setText("Set " + (mCurrentSet));
             mTitleTextView.setText(mExerciseName);
+            mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
         }
-        mWorkoutName = getArguments().getString(getString(R.string.workout_title));
-        ((AppCompatActivity) getActivity())
-                .getSupportActionBar()
-                .setTitle(getArguments().getString(getString(R.string.workout_title)));
-
-
-        mPauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
-        mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
-        if (mPauseResumeFlag == PAUSE) {
+        if (mPauseResumeFlag == getResources().getInteger(R.integer.pause)) {
             mPauseResumeButton.setText(R.string.resume);
-        }else if(mPauseResumeFlag==STOP){
+        } else if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
             mPauseResumeButton.setText(getString(R.string.start_again));
         }
         mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
@@ -99,21 +104,21 @@ public class TimerFragment extends Fragment {
             public void onClick(View v) {
                 if (mPauseResumeButton.getText().toString().equals(getString(R.string.pause))) {
                     mPauseResumeButton.setText(R.string.resume);
-                    mPauseResumeFlag = PAUSE;
-                    mService.pauseResumeTimer(PAUSE);
+                    mPauseResumeFlag = getResources().getInteger(R.integer.pause);
+                    mService.pauseResumeTimer(getResources().getInteger(R.integer.pause));
                 } else if (mPauseResumeButton.getText().toString().equals(getString(R.string.resume))) {
                     mPauseResumeButton.setText(R.string.pause);
-                    mPauseResumeFlag = RESUME;
-                    mService.pauseResumeTimer(RESUME);
+                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+                    mService.pauseResumeTimer(getResources().getInteger(R.integer.resume));
                 } else {
                     mPauseResumeButton.setText(getString(R.string.pause));
-                    mPauseResumeFlag = RESUME;
-                    mService.pauseResumeTimer(RESUME);
+                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+                    mService.pauseResumeTimer(getResources().getInteger(R.integer.resume));
                     mIsFinished = false;
-                    //reset();
                 }
             }
         });
+
 
         return view;
     }
@@ -131,7 +136,7 @@ public class TimerFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(getString(R.string.current_set), mCurrentSet);
         outState.putInt(getString(R.string.total_time), mTotalTime);
-        outState.putInt(getString(R.string.state), mPauseResumeFlag);
+        outState.putInt(getString(R.string.timer_state), mPauseResumeFlag);
         outState.putBoolean(getString(R.string.finished), mIsFinished);
         outState.putString(getString(R.string.exercise_name), mExerciseName);
         super.onSaveInstanceState(outState);
@@ -163,7 +168,7 @@ public class TimerFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
-            Log.d(TAG,"onServiceConnected");
+            Log.d(TAG, "onServiceConnected");
             mService = binder.getService();
             mService.stopMessages(false);
             mBound = true;
@@ -190,7 +195,7 @@ public class TimerFragment extends Fragment {
                 mSetsTextView.setText("Set " + mCurrentSet);
             } else {
                 if (msg.arg1 == -1) {
-                    mPauseResumeFlag = STOP;
+                    mPauseResumeFlag = getResources().getInteger(R.integer.stop);
                     mIsFinished = true;
                     mPauseResumeButton.setText(getString(R.string.start_again));
                 }

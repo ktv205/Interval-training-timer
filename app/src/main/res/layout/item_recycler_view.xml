@@ -5,7 +5,7 @@
     android:orientation="vertical">
 
     <TextView
-        android:id="@+id/workout_text_view"
+        android:id="@+id/exercise_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="25dp"
@@ -24,10 +24,10 @@
             android:layout_weight="1" />
 
         <Button
-            android:id="@+id/change_button"
+            android:id="@+id/edit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/change" />
+            android:text="@string/edit" />
 
     </LinearLayout>
 

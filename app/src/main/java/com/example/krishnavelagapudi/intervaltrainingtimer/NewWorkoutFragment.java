@@ -13,15 +13,19 @@ import android.widget.Button;
 /**
  * Created by krishnavelagapudi on 9/8/15.
  */
-public class VaryingTimesFragment extends Fragment {
+public class NewWorkoutFragment extends Fragment {
     private static final java.lang.String NUMBER_DIALOG = "number dialog";
+    private ExerciseNumber mExerciseNumber;
 
 
-    public static VaryingTimesFragment newInstance() {
+    public interface ExerciseNumber{
+        void showExerciseNumberPickerDialog();
+    }
 
-        Bundle args = new Bundle();
 
-        VaryingTimesFragment fragment = new VaryingTimesFragment();
+    public static NewWorkoutFragment newInstance(Bundle bundle) {
+        Bundle args = bundle;
+        NewWorkoutFragment fragment = new NewWorkoutFragment();
         fragment.setArguments(args);
         return fragment;
     }
@@ -30,21 +34,16 @@ public class VaryingTimesFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        mExerciseNumber=(ExerciseNumber)getActivity();
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.app_name));
         View view = inflater.inflate(R.layout.fragment_varying_times, container, false);
         Button varyingTimesButton = (Button) view.findViewById(R.id.times_button);
         varyingTimesButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NumberPickerDialog numberPickerDialog = new NumberPickerDialog();
-                Bundle bundle = new Bundle();
-                bundle.putInt(getActivity().getResources().getString(R.string.select_workout_number),
-                        getActivity().getResources().getInteger(R.integer.workout_number));
-                numberPickerDialog.setArguments(bundle);
-                numberPickerDialog.show(getActivity().getFragmentManager(), NUMBER_DIALOG);
+                mExerciseNumber.showExerciseNumberPickerDialog();
             }
         });
-
         return view;
     }
 }

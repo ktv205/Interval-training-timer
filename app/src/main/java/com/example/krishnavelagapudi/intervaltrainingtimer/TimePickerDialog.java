@@ -6,7 +6,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -41,10 +40,8 @@ public class TimePickerDialog extends DialogFragment {
         void onTimePicked(String workoutName, int minutes, int seconds, int position);
     }
 
-    public static TimePickerDialog newInstance() {
-        
-        Bundle args = new Bundle();
-        
+    public static TimePickerDialog newInstance(Bundle bundle) {
+        Bundle args = bundle;
         TimePickerDialog fragment = new TimePickerDialog();
         fragment.setArguments(args);
         return fragment;
@@ -64,10 +61,10 @@ public class TimePickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.dialog_time_picker, container, false);
-        final int key = getArguments().getInt(getString(R.string.time_picker_key));
+        final int key = getArguments().getInt(getString(R.string.pick_time_for));
         final NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
         final NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
-        final EditText editText = (EditText) view.findViewById(R.id.label_edit_text);
+        final EditText editText = (EditText) view.findViewById(R.id.exersice_name_edit_text);
         final Button okButton = (Button) view.findViewById(R.id.ok_button);
         setCancelable(false);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -83,7 +80,6 @@ public class TimePickerDialog extends DialogFragment {
             }
         });
         if (savedInstanceState != null) {
-            Log.d(TAG, "herer in savedInstance not null");
             mMin = savedInstanceState.getInt(getString(R.string.minutes));
             mSec = savedInstanceState.getInt(getString(R.string.seconds));
         }
@@ -99,15 +95,14 @@ public class TimePickerDialog extends DialogFragment {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
                 mSec = newVal;
-                Log.d(TAG, "value->" + newVal);
             }
         });
 
-        if (key == getResources().getInteger(R.integer.time_picker)) {
-            getDialog().setTitle(getString(R.string.time_picker) + " " + getArguments().getInt(getString(R.string.exercise_number)));
+        if (key == getResources().getInteger(R.integer.pick_time)) {
+            getDialog().setTitle(getString(R.string.create_exercise_title) + " " + getArguments().getInt(getString(R.string.exercise_number)));
         } else {
-            getDialog().setTitle(getString(R.string.change_title));
-            WorkoutModel workoutModel = getArguments().getParcelable(getString(R.string.workout_key));
+            getDialog().setTitle(getString(R.string.edit_exercise_title));
+            WorkoutModel workoutModel = getArguments().getParcelable(getString(R.string.workout_model));
             minutePicker.setValue(workoutModel.getMin());
             secondPicker.setValue(workoutModel.getSec());
             editText.setText(workoutModel.getExerciseName());
@@ -117,13 +112,13 @@ public class TimePickerDialog extends DialogFragment {
             @Override
             public void onClick(View v) {
                 int position = -1;
-                if (key == getResources().getInteger(R.integer.time_changer)) {
+                if (key == getResources().getInteger(R.integer.change_time)) {
                     position = getArguments().getInt(getString(R.string.list_position));
                 }
                 int value = checkFields(editText, minutePicker, secondPicker);
                 String error = null;
                 if (value == WORKOUT_FIELD_EMPTY) {
-                    editText.setHint(getString(R.string.exercise_empty));
+                    editText.setHint(getString(R.string.exercise_empty_error));
                     editText.setHintTextColor(ContextCompat.getColor(getActivity(), android.R.color.holo_red_dark));
                     error = "Please enter a name for the exercise";
                 } else if (value == TIME_FIELD_EMPTY) {

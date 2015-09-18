@@ -31,21 +31,18 @@ import java.util.TimerTask;
  */
 public class TimerService extends Service {
     private static final String TAG = TimerService.class.getSimpleName();
-    private static final int STOP = 2;
     private final IBinder mBinder = new TimerBinder();
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private String mWorkoutName;
     private int mExerciseNumber;
     private int mTotalSets;
-    final static int RESUME = 1;
-    int mPauseResumeFlag = RESUME;
+    int mPauseResumeFlag=1;
     private Timer mTimer;
     Messenger mMessenger;
     private int mTotalTime;
     private int mRepeatTimes;
     NotificationManager mNotificationManager;
     NotificationCompat.Builder mBuilder;
-    private int mNumMessages;
     private boolean stopFlag = false;
 
     @Nullable
@@ -58,7 +55,7 @@ public class TimerService extends Service {
     public int onStartCommand(Intent intent, int flags, int startId) {
         Log.d(TAG, "service started");
         startNotificationBuilder();
-        Log.d(TAG,"size->"+mWorkoutModelArrayList.size());
+        Log.d(TAG, "size->" + mWorkoutModelArrayList.size());
         return START_NOT_STICKY;
     }
 
@@ -116,7 +113,6 @@ public class TimerService extends Service {
                         .setSmallIcon(R.drawable.timer);
         mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
-        mNumMessages = 0;
     }
 
     private void initTimer() {
@@ -153,16 +149,17 @@ public class TimerService extends Service {
                     mTotalTime = mTotalTime + workoutModel.getSec();
                 }
                 while (mTotalTime >= 0) {
-                    if (mPauseResumeFlag == RESUME) {
-                        final String time = String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60));
+                    final String time = String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60));
+                    if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
                         try {
                             sendTime(time, mTotalTime);
-                            updateNotification(time, workoutModel.getExerciseName(), mTotalSets - mRepeatTimes);
                             mTotalTime--;
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
                     }
+                    updateNotification(time, workoutModel.getExerciseName(), mTotalSets - mRepeatTimes);
+
                     try {
                         Thread.sleep(1000);
                     } catch (InterruptedException e) {
@@ -187,7 +184,7 @@ public class TimerService extends Service {
                     e.printStackTrace();
                 }
                 removeNotification();
-                mPauseResumeFlag = STOP;
+                mPauseResumeFlag = getResources().getInteger(R.integer.stop);
                 mTimer.cancel();
 
                 mTimer = null;
@@ -204,12 +201,16 @@ public class TimerService extends Service {
     private void updateNotification(String time, String exerciseName, int mRepeatTimes) {
         mBuilder.setContentTitle(mWorkoutName + " " + "set " + mRepeatTimes + " " + exerciseName)
                 .setContentText(time);
+        Log.d(TAG,"pauseresume->"+mPauseResumeFlag);
         Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(getString(R.string.workout_key), mWorkoutModelArrayList);
-        intent.putExtra(getString(R.string.repeat_times), mTotalSets);
-        intent.putExtra(getString(R.string.workout_title), mWorkoutName);
-        intent.putExtra(getString(R.string.current_fragment), TimerFragment.class.getSimpleName());
-        intent.setFlags( Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra(getString(R.string.from_notification), true);
+        intent.putExtra(getString(R.string.workout_model), mWorkoutModelArrayList);
+        intent.putExtra(getString(R.string.set_number), mRepeatTimes);
+        intent.putExtra(getString(R.string.workout_name), mWorkoutName);
+        intent.putExtra(getString(R.string.exercise_name),exerciseName);
+        intent.putExtra(getString(R.string.time),time);
+        intent.putExtra(getString(R.string.timer_state),mPauseResumeFlag);
+        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(MainActivity.class);
         stackBuilder.addNextIntent(intent);

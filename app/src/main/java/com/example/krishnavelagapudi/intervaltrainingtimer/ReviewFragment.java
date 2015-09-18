@@ -26,14 +26,11 @@ import java.util.ArrayList;
  */
 public class ReviewFragment extends Fragment {
 
-    private static final String TIME_PICKER_DIALOG_TAG = "time picker";
-    private static final String NUMBER_PICKER_DIALOG_TAG = "number picker";
-    private static final String TAG = ReviewFragment.class.getSimpleName();
     private static final int SETS_EMPTY = 1;
     private static final int TITLE_EMPTY = 2;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private View mView;
-    Button mRepeatButton;
+    Button mSetsButton;
     RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private int mNumber = 0;
@@ -42,11 +39,15 @@ public class ReviewFragment extends Fragment {
 
     public interface OnStartTimerListener {
         void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number, String workoutName);
+
+        void pickSetsNumber();
+
+        void editExercise(int position, WorkoutModel workoutModel);
     }
 
-    public static ReviewFragment newInstance() {
+    public static ReviewFragment newInstance(Bundle bundle) {
 
-        Bundle args = new Bundle();
+        Bundle args = bundle;
 
         ReviewFragment fragment = new ReviewFragment();
         fragment.setArguments(args);
@@ -62,13 +63,13 @@ public class ReviewFragment extends Fragment {
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-        mWorkoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_key));
+        mWorkoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_model));
         mRecyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
         mRecyclerView.setAdapter(new RecyclerViewAdapter(mWorkoutModelArrayList));
-        mRepeatButton = (Button) mView.findViewById(R.id.repeat_button);
+        mSetsButton = (Button) mView.findViewById(R.id.sets_button);
         final Button startButton = (Button) mView.findViewById(R.id.start_button);
-        final EditText titleEditText = (EditText) mView.findViewById(R.id.title_edit_text);
-        titleEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
+        final EditText workoutEditText = (EditText) mView.findViewById(R.id.workout_name_edit_text);
+        workoutEditText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
                 InputMethodManager imm = (InputMethodManager) getActivity().getSystemService(Context.INPUT_METHOD_SERVICE);
@@ -77,24 +78,19 @@ public class ReviewFragment extends Fragment {
                 return true;
             }
         });
-        mRepeatButton.setOnClickListener(new View.OnClickListener() {
+        mSetsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                NumberPickerDialog numberPickerDialog = new NumberPickerDialog();
-                Bundle bundle = new Bundle();
-                bundle.putInt(getResources().getString(R.string.select_workout_number),
-                        getResources().getInteger(R.integer.repeat_number));
-                numberPickerDialog.setArguments(bundle);
-                numberPickerDialog.show(getFragmentManager(), NUMBER_PICKER_DIALOG_TAG);
+                mOnStartTimerListener.pickSetsNumber();
             }
         });
 
         startButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                int value = checkFields(titleEditText);
+                int value = checkFields(workoutEditText);
                 if (value == 0) {
-                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber, titleEditText.getText().toString());
+                    mOnStartTimerListener.OnStartTimer(mWorkoutModelArrayList, mNumber, workoutEditText.getText().toString());
                 } else {
                     String error = null;
                     if (value == TITLE_EMPTY) {
@@ -136,9 +132,9 @@ public class ReviewFragment extends Fragment {
     public void updateRepeatTimes(int number) {
         mNumber = number;
         if (number == 1) {
-            mRepeatButton.setText("Don't repeat");
+            mSetsButton.setText("Don't repeat");
         } else {
-            mRepeatButton.setText("Repeat " + number + " times");
+            mSetsButton.setText("Repeat " + number + " times");
         }
     }
 
@@ -163,17 +159,11 @@ public class ReviewFragment extends Fragment {
             String time = String.format("%02d", mWorkoutModelList.get(i).getMin()) + ":"
                     + String.format("%02d", mWorkoutModelList.get(i).getSec()) + " minutes";
             viewHolder.timeTextView.setText(time);
-            viewHolder.workoutTextView.setText(mWorkoutModelList.get(i).getExerciseName());
+            viewHolder.exerciseTextView.setText(mWorkoutModelList.get(i).getExerciseName());
             viewHolder.changeButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    TimePickerDialog timePickerDialog = new TimePickerDialog();
-                    Bundle bundle = new Bundle();
-                    bundle.putInt(getString(R.string.time_picker_key), getResources().getInteger(R.integer.time_changer));
-                    bundle.putInt(getString(R.string.list_position), position);
-                    bundle.putParcelable(getString(R.string.workout_key), mWorkoutModelList.get(position));
-                    timePickerDialog.setArguments(bundle);
-                    timePickerDialog.show(getFragmentManager(), TIME_PICKER_DIALOG_TAG);
+                    mOnStartTimerListener.editExercise(position, mWorkoutModelArrayList.get(position));
                 }
             });
         }
@@ -185,14 +175,14 @@ public class ReviewFragment extends Fragment {
 
 
         class ViewHolder extends RecyclerView.ViewHolder {
-            TextView workoutTextView, timeTextView;
+            TextView exerciseTextView, timeTextView;
             Button changeButton;
 
             public ViewHolder(View itemView) {
                 super(itemView);
-                workoutTextView = (TextView) itemView.findViewById(R.id.workout_text_view);
+                exerciseTextView = (TextView) itemView.findViewById(R.id.exercise_text_view);
                 timeTextView = (TextView) itemView.findViewById(R.id.time_text_view);
-                changeButton = (Button) itemView.findViewById(R.id.change_button);
+                changeButton = (Button) itemView.findViewById(R.id.edit_button);
             }
         }
 

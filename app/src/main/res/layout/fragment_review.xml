@@ -14,16 +14,16 @@
     </android.support.v7.widget.RecyclerView>
 
     <Button
-        android:id="@+id/repeat_button"
+        android:id="@+id/sets_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/repeat_times" />
+        android:text="@string/set_number" />
 
     <EditText
-        android:id="@+id/title_edit_text"
+        android:id="@+id/workout_name_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="@string/pick_a_name"
+        android:hint="@string/workout_name_hint"
         android:imeOptions="actionDone"
         android:singleLine="true" />
 

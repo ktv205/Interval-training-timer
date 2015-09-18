@@ -19,10 +19,8 @@ public class NumberPickerDialog extends DialogFragment {
     private OnNumberPickedListener mOnNumberPickedListener;
     private int mNumber=1;
 
-    public static NumberPickerDialog newInstance() {
-        
-        Bundle args = new Bundle();
-        
+    public static NumberPickerDialog newInstance(Bundle bundle) {
+        Bundle args = bundle;
         NumberPickerDialog fragment = new NumberPickerDialog();
         fragment.setArguments(args);
         return fragment;
@@ -47,10 +45,11 @@ public class NumberPickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_number_picker, container, false);
-        if (getArguments().getInt(getString(R.string.select_workout_number)) == getResources().getInteger(R.integer.workout_number)) {
-            getDialog().setTitle(getString(R.string.workouts_title));
+        final int pickNumberFor=getArguments().getInt(getString(R.string.pick_number_for));
+        if (pickNumberFor == getResources().getInteger(R.integer.exercise_number)) {
+            getDialog().setTitle(getString(R.string.exercises_title));
         } else {
-            getDialog().setTitle(getString(R.string.repeat_times_title));
+            getDialog().setTitle(getString(R.string.sets_title));
         }
 
         final NumberPicker numberPicker = (NumberPicker) view.findViewById(R.id.number_picker);
@@ -73,11 +72,10 @@ public class NumberPickerDialog extends DialogFragment {
                 mNumber=numberPicker.getValue();
             }
         });
-        final int key = getArguments().getInt(getString(R.string.select_workout_number));
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                mOnNumberPickedListener.onNumberPicked(numberPicker.getValue(), key);
+                mOnNumberPickedListener.onNumberPicked(numberPicker.getValue(), pickNumberFor);
                 getDialog().cancel();
 
             }
