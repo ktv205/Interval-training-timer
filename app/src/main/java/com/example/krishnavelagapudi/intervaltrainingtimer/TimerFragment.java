@@ -1,6 +1,5 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
-import android.app.ActivityManager;
 import android.app.Fragment;
 import android.content.ComponentName;
 import android.content.Context;
@@ -13,7 +12,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -32,37 +30,32 @@ public class TimerFragment extends Fragment {
     TextView mTimeTextView;
     int mCurrentSet;
     ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
-    private TextView mTitleTextView;
-    int mPauseResumeFlag=1;
-    int mTotalTime;
+    private TextView mCurrentExerciseNameTextView;
+    int mPauseResumeFlag = 1;
+    int mCurrentExerciseTime;
     int mTotalSets;
-    private TextView mSetsTextView;
+    private TextView mCurrentSetTextView;
     boolean mIsFinished = false;
     private Button mPauseResumeButton;
-    private String mExerciseName;
+    private String mCurrentExerciseName;
 
 
     public static TimerFragment newInstance(Bundle bundle) {
 
         Bundle args = bundle;
-
         TimerFragment fragment = new TimerFragment();
         fragment.setArguments(args);
         return fragment;
     }
 
+
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        Intent intent = new Intent(getActivity(), TimerService.class);
-        if (!isMyServiceRunning(TimerService.class, getActivity())) {
-            getActivity().startService(intent);
-        }
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         View view = inflater.inflate(R.layout.fragment_timer, container, false);
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
-        mTitleTextView = (TextView) view.findViewById(R.id.title_text_view);
-        mSetsTextView = (TextView) view.findViewById(R.id.sets_textView);
+        mCurrentExerciseNameTextView = (TextView) view.findViewById(R.id.title_text_view);
+        mCurrentSetTextView = (TextView) view.findViewById(R.id.sets_textView);
         mPauseResumeButton = (Button) view.findViewById(R.id.pause_resume_button);
         ArrayList<WorkoutModel> workoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_model));
         mWorkoutModelArrayList = workoutModelArrayList;
@@ -76,23 +69,24 @@ public class TimerFragment extends Fragment {
             mPauseResumeFlag = getArguments().getInt(getString(R.string.timer_state));
             mCurrentSet = getArguments().getInt(getString(R.string.current_set));
             mTotalSets = getArguments().getInt(getString(R.string.set_number));
-            mExerciseName = getArguments().getString(getString(R.string.exercise_name));
-            mSetsTextView.setText("Set " + (mCurrentSet));
-            mTitleTextView.setText(mExerciseName);
+            mCurrentExerciseName = getArguments().getString(getString(R.string.exercise_name));
+            mCurrentSetTextView.setText("Set " + (mCurrentSet));
+            mCurrentExerciseNameTextView.setText(mCurrentExerciseName);
+
         } else {
-            mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
+            mTimeTextView.setText(String.format("%02d", (mCurrentExerciseTime / 60)) + ":" + String.format("%02d", (mCurrentExerciseTime % 60)));
         }
         if (savedInstanceState == null) {
             mTotalSets = getArguments().getInt(getString(R.string.set_number));
         } else {
-            mTotalTime = savedInstanceState.getInt(getString(R.string.total_time));
+            mCurrentExerciseTime = savedInstanceState.getInt(getString(R.string.current_exercise_time));
             mPauseResumeFlag = savedInstanceState.getInt(getString(R.string.timer_state), mPauseResumeFlag);
             mTotalSets = getArguments().getInt(getString(R.string.set_number));
             mCurrentSet = savedInstanceState.getInt(getString(R.string.current_set));
-            mExerciseName = savedInstanceState.getString(getString(R.string.exercise_name));
-            mSetsTextView.setText("Set " + (mCurrentSet));
-            mTitleTextView.setText(mExerciseName);
-            mTimeTextView.setText(String.format("%02d", (mTotalTime / 60)) + ":" + String.format("%02d", (mTotalTime % 60)));
+            mCurrentExerciseName = savedInstanceState.getString(getString(R.string.exercise_name));
+            mCurrentSetTextView.setText("Set " + (mCurrentSet));
+            mCurrentExerciseNameTextView.setText(mCurrentExerciseName);
+            mTimeTextView.setText(String.format("%02d", (mCurrentExerciseTime / 60)) + ":" + String.format("%02d", (mCurrentExerciseTime % 60)));
         }
         if (mPauseResumeFlag == getResources().getInteger(R.integer.pause)) {
             mPauseResumeButton.setText(R.string.resume);
@@ -118,47 +112,52 @@ public class TimerFragment extends Fragment {
                 }
             }
         });
+        Intent intent = new Intent(getActivity(), TimerService.class);
+        if (!Utils.isMyServiceRunning(TimerService.class, getActivity())) {
+            getActivity().startService(intent);
+        }
+        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
+
 
 
         return view;
     }
 
-    /*private void reset() {
-        mExerciseNumber = 1;
-        mTotalTime = -1;
-        mRepeatTimes = mTotalSets;
-        mTimer.purge();
-        mTimer = new Timer();
-        mTimer.scheduleAtFixedRate(new IntervalTimerTask(), 0, 1000);
-    }*/
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
         outState.putInt(getString(R.string.current_set), mCurrentSet);
-        outState.putInt(getString(R.string.total_time), mTotalTime);
+        outState.putInt(getString(R.string.current_exercise_time), mCurrentExerciseTime);
         outState.putInt(getString(R.string.timer_state), mPauseResumeFlag);
         outState.putBoolean(getString(R.string.finished), mIsFinished);
-        outState.putString(getString(R.string.exercise_name), mExerciseName);
+        outState.putString(getString(R.string.exercise_name), mCurrentExerciseName);
         super.onSaveInstanceState(outState);
 
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
-        Log.d(TAG, "onStop");
-        if (mBound) {
-            mService.stopMessages(true);
-            getActivity().unbindService(mConnection);
-            mBound = false;
+    public void onResume() {
+        super.onResume();
+        if(mBound){
+            mService.stopMessages(false);
         }
-
     }
 
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mBound) {
+            mService.stopMessages(true);
+        }
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
+        if(mBound) {
+            getActivity().unbindService(mConnection);
+            mBound = false;
+        }
     }
 
     private boolean mBound;
@@ -168,7 +167,6 @@ public class TimerFragment extends Fragment {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
             TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
-            Log.d(TAG, "onServiceConnected");
             mService = binder.getService();
             mService.stopMessages(false);
             mBound = true;
@@ -190,46 +188,23 @@ public class TimerFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            if (msg.arg1 > 0) {
-                mCurrentSet = msg.arg1;
-                mSetsTextView.setText("Set " + mCurrentSet);
-            } else {
-                if (msg.arg1 == -1) {
-                    mPauseResumeFlag = getResources().getInteger(R.integer.stop);
-                    mIsFinished = true;
-                    mPauseResumeButton.setText(getString(R.string.start_again));
-                }
-            }
             Bundle bundle = msg.getData();
-            if (bundle != null) {
-                String time = bundle.getString(getString(R.string.time));
-                if (time != null) {
-                    mTimeTextView.setText(time);
-                    mTotalTime = msg.arg2;
-                }
-                String exerciseName = bundle.getString(getString(R.string.exercise_name));
-                if (exerciseName != null) {
-                    mTitleTextView.setText(exerciseName);
-                    mExerciseName = exerciseName;
-
-                }
+            if(bundle.getBoolean(getString(R.string.timer_running))) {
+                mCurrentExerciseTime = msg.arg1;
+                mCurrentSet = msg.arg2;
+                mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
+                mCurrentExerciseNameTextView.setText(mCurrentExerciseName);
+                mCurrentSetTextView.setText("Set "+mCurrentSet);
+                mTimeTextView.setText(String.format("%02d", (mCurrentExerciseTime / 60)) + ":"
+                        + String.format("%02d", (mCurrentExerciseTime % 60)));
+            }else{
+                mPauseResumeFlag=getResources().getInteger(R.integer.stop);
+                mPauseResumeButton.setText(getString(R.string.start_again));
             }
         }
     }
 
     final Messenger mMessenger = new Messenger(new IncomingHandler());
 
-    public static boolean isMyServiceRunning(Class<?> serviceClass,
-                                             Context context) {
-        ActivityManager manager = (ActivityManager) context
-                .getSystemService(Context.ACTIVITY_SERVICE);
-        boolean running = false;
-        for (ActivityManager.RunningServiceInfo service : manager
-                .getRunningServices(Integer.MAX_VALUE)) {
-            if (serviceClass.getName().equals(service.service.getClassName())) {
-                running = true;
-            }
-        }
-        return running;
-    }
+
 }

@@ -4,6 +4,7 @@ import android.app.Fragment;
 import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -95,6 +96,8 @@ public class ReviewFragment extends Fragment {
                     String error = null;
                     if (value == TITLE_EMPTY) {
                         error = "Please name the workout";
+                        workoutEditText.setHint("Please name the workout");
+                        workoutEditText.setHintTextColor(ContextCompat.getColor(getActivity(), android.R.color.holo_red_dark));
                     } else if (value == SETS_EMPTY) {
                         error = "Please select sets by clicking the repeat times button";
                     }
