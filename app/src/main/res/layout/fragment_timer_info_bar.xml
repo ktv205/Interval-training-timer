@@ -1,40 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="horizontal"
+    android:gravity="center_vertical"
+    android:layout_alignParentBottom="true"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:gravity="center"
-    android:background="@android:color/white">
-
+    android:layout_height="wrap_content"
+    android:background="@android:color/holo_blue_bright">
     <TextView
         android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="45sp"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
         tools:text="workoutname"/>
 
     <TextView
         android:id="@+id/sets_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="45sp"
+        android:textSize="20sp"
+        android:textColor="@android:color/white"
+        android:layout_marginStart="10dp"
+        android:layout_marginLeft="10dp"
         tools:text="set #"/>
 
     <TextView
         android:id="@+id/time_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:layout_gravity="center"
-        android:textSize="120sp"
+        android:gravity="end"
+        android:textColor="@android:color/white"
+        android:textSize="30sp"
         tools:text="00:00"/>
 
     <ImageButton
         android:id="@+id/pause_resume_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        tools:src="@drawable/ic_play_circle_filled_black_48dp"/>
-
+        tools:src="@drawable/ic_play_circle_filled_black_18dp"/>
 
 </LinearLayout>

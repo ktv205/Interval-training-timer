@@ -126,7 +126,7 @@ public class ReviewFragment extends Fragment {
         String time = String.format("%02d", workoutModel.getMin()) + ":"
                 + String.format("%02d", workoutModel.getSec()) + " minutes";
         TimeTextView.setText(time);
-        TextView titleTextView = (TextView) view.findViewById(R.id.title_text_view);
+        TextView titleTextView = (TextView) view.findViewById(R.id.exercise_text_view);
         titleTextView.setText(workoutModel.getExerciseName());
         mWorkoutModelArrayList.remove(position);
         mWorkoutModelArrayList.add(position, workoutModel);

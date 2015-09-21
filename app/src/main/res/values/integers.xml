@@ -7,4 +7,6 @@
     <integer name="resume">1</integer>
     <integer name="pause">0</integer>
     <integer name="stop">2</integer>
+    <integer name="notification">0</integer>
+    <integer name="info_bar">1</integer>
 </resources>

@@ -1,26 +1,16 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
 import android.app.FragmentManager;
-import android.content.ComponentName;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.IBinder;
-import android.os.Message;
-import android.os.Messenger;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
-import android.view.View;
-import android.widget.LinearLayout;
-import android.widget.TextView;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NumberPickerDialog.OnNumberPickedListener,
-        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber {
+        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener {
 
     private static final String TIME_DIALOG = "time dialog";
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
@@ -35,41 +25,29 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         boolean fromNotification = checkIfFromNotification();
         if (savedInstanceState == null) {
             if (!fromNotification) {
-                Bundle bundle = new Bundle();
-                NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(bundle);
+                NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
                 getFragmentManager()
                         .beginTransaction()
                         .replace(R.id.relative_container, newWorkoutFragment, NewWorkoutFragment.class.getSimpleName())
                         .commit();
             } else {
                 TimerFragment timerFragment;
-                Intent intent = getIntent();
-                Bundle bundle = intent.getExtras();
-                NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(bundle);
+                NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
                 getFragmentManager()
                         .beginTransaction()
                         .replace(R.id.relative_container, newWorkoutFragment, NewWorkoutFragment.class.getSimpleName())
                         .commit();
+                Bundle bundle = getIntent().getExtras();
                 timerFragment = TimerFragment.newInstance(bundle);
                 getFragmentManager()
                         .beginTransaction()
                         .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
                         .addToBackStack(NewWorkoutFragment.class.getSimpleName())
                         .commit();
-                Log.d(TAG, "timer state->" + bundle.getInt(getString(R.string.timer_state)));
-                getIntent().setData(null);
-                setIntent(null);
-
-
             }
         }
     }
 
-    @Override
-    protected void onNewIntent(Intent intent) {
-        Log.d(TAG, "new intent");
-        super.onNewIntent(intent);
-    }
 
     private boolean checkIfFromNotification() {
         Intent intent = getIntent();
@@ -151,7 +129,10 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         Bundle bundle = new Bundle();
         bundle.putParcelableArrayList(getString(R.string.workout_model), workoutModelArrayList);
         bundle.putInt(getString(R.string.set_number), number);
+        bundle.putInt(getString(R.string.current_set), 1);
         bundle.putString(getString(R.string.workout_name), workoutName);
+        bundle.putString(getString(R.string.exercise_name), workoutModelArrayList.get(0).getExerciseName());
+        bundle.putInt(getString(R.string.timer_state), getResources().getInteger(R.integer.resume));
         TimerFragment timerFragment = TimerFragment.newInstance(bundle);
         getFragmentManager().beginTransaction()
                 .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
@@ -181,20 +162,28 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     @Override
     public void onBackPressed() {
         if (getFragmentManager().getBackStackEntryCount() > 0) {
+            TimerFragment timerFragment = (TimerFragment) getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName());
             getFragmentManager().popBackStack(NewWorkoutFragment.class.getSimpleName(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            setUpPreviewTimerLayout();
+            Bundle bundle = new Bundle();
+            if (timerFragment != null) {
+                bundle.putParcelableArrayList(getString(R.string.workout_model), timerFragment.mWorkoutModelArrayList);
+                bundle.putInt(getString(R.string.set_number), timerFragment.mTotalSets);
+                bundle.putInt(getString(R.string.current_set), timerFragment.mCurrentSet);
+                bundle.putString(getString(R.string.workout_name), timerFragment.mWorkoutName);
+                bundle.putString(getString(R.string.exercise_name), timerFragment.mCurrentExerciseName);
+                bundle.putInt(getString(R.string.timer_state), timerFragment.mPauseResumeFlag);
+                bundle.putInt(getString(R.string.time), timerFragment.mCurrentExerciseTime);
+            }
+            bundle.putInt(getString(R.string.how_to_lay), getResources().getInteger(R.integer.info_bar));
+            getFragmentManager()
+                    .beginTransaction()
+                    .add(R.id.relative_container, TimerFragment.newInstance(bundle), TimerFragment.class.getSimpleName())
+                    .commit();
         } else {
             super.onBackPressed();
         }
     }
 
-    private void setUpPreviewTimerLayout() {
-        Log.d(TAG, "setUpPreviewTimerLayout");
-        Intent intent = new Intent(this, TimerService.class);
-        if (Utils.isMyServiceRunning(TimerService.class, this)) {
-            bindService(intent, mConnection, BIND_AUTO_CREATE);
-        }
-    }
 
     @Override
     public void showExerciseNumberPickerDialog() {
@@ -205,83 +194,21 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (mBound) {
-            mService.stopMessages(true);
-        }
+    public void onInfoBarClick(ArrayList<WorkoutModel> workoutModelArrayList, int currentSet, int totalSets, int pauseResumeFlag, int currentTime, String currentExerciseName, String workoutName) {
+        getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName())).commit();
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(getString(R.string.workout_model), workoutModelArrayList);
+        bundle.putInt(getString(R.string.set_number), totalSets);
+        bundle.putInt(getString(R.string.current_set), currentSet);
+        bundle.putString(getString(R.string.workout_name), workoutName);
+        bundle.putString(getString(R.string.exercise_name), currentExerciseName);
+        bundle.putInt(getString(R.string.timer_state), pauseResumeFlag);
+        bundle.putInt(getString(R.string.time), currentTime);
+        TimerFragment timerFragment = TimerFragment.newInstance(bundle);
+        getFragmentManager()
+                .beginTransaction()
+                .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
+                .addToBackStack(NewWorkoutFragment.class.getSimpleName())
+                .commit();
     }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        if (mBound) {
-            unbindService(mConnection);
-            mBound = false;
-        }
-    }
-
-    private boolean mBound;
-    private TimerService mService;
-    private LinearLayout mContainerLayout;
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
-            mBound = true;
-            mService = binder.getService();
-            mService.setMessenger(mMessenger);
-            mService.stopMessages(false);
-            mContainerLayout = (LinearLayout) findViewById(R.id.linear_preview_container);
-            mContainerLayout.setVisibility(View.VISIBLE);
-            mContainerLayout.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    if (mBound) {
-                        mService.stopMessages(true);
-                        unbindService(mConnection);
-                        mBound = false;
-                        TimerFragment timerFragment = TimerFragment.newInstance(new Bundle());
-                        getFragmentManager()
-                                .beginTransaction()
-                                .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
-                                .addToBackStack(NewWorkoutFragment.class.getSimpleName())
-                                .commit();
-
-                    }
-                }
-            });
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mBound = false;
-        }
-    };
-
-
-    class IncomingHandler extends Handler {
-
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            Bundle bundle = msg.getData();
-            if (bundle.getBoolean(getString(R.string.timer_running))) {
-                int exerciseTime = msg.arg1;
-                int currentSet = msg.arg2;
-                String exerciseName = bundle.getString(getString(R.string.exercise_name));
-                TextView detailsTextView = (TextView) findViewById(R.id.workout_details_text_view);
-                TextView timeTextView = (TextView) findViewById(R.id.workout_time_text_view);
-                detailsTextView.setText(exerciseName + " Set-" + currentSet);
-                timeTextView.setText(String.format("%02d", (exerciseTime / 60)) + ":"
-                        + String.format("%02d", (exerciseTime % 60)));
-            } else {
-                mContainerLayout.setVisibility(View.GONE);
-            }
-
-        }
-    }
-
-    final Messenger mMessenger = new Messenger(new IncomingHandler());
-
 }

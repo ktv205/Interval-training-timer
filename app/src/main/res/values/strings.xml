@@ -38,4 +38,6 @@
     <string name="timer_state">timer state</string>
     <string name="current_exercise_time">current exercise time</string>
     <string name="timer_running">timer running</string>
+    <string name="from_info_bar">from info bar</string>
+    <string name="how_to_lay">how to lay</string>
 </resources>

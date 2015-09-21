@@ -29,15 +29,14 @@ import java.util.TimerTask;
  * Created by krishnavelagapudi on 9/14/15.
  */
 public class TimerService extends Service {
-    private static final String TAG = TimerService.class.getSimpleName();
     private final IBinder mBinder = new TimerBinder();
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private String mWorkoutName;
-    private int mCurrentExerciseTime=-1;
-    private int mExerciseNumber=1;
+    private int mCurrentExerciseTime = -1;
+    private int mExerciseNumber = 1;
     private int mTotalSets;
-    private int mCurrentSet=0;
-    int mPauseResumeFlag=1;
+    private int mCurrentSet = 0;
+    int mPauseResumeFlag = 1;
     private Timer mTimer;
     Messenger mMessenger;
     NotificationManager mNotificationManager;
@@ -88,13 +87,9 @@ public class TimerService extends Service {
         mWorkoutModelArrayList = workoutArrayList;
         mWorkoutName = workoutName;
         mTotalSets = totalSets;
-        initTimer();
+
     }
 
-    public void pauseResumeTimer(int pauseResumeFlag) {
-        mPauseResumeFlag = pauseResumeFlag;
-        initTimer();
-    }
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void startNotificationBuilder() {
@@ -105,8 +100,8 @@ public class TimerService extends Service {
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    private void initTimer() {
-        if (mTimer == null && mPauseResumeFlag==getResources().getInteger(R.integer.resume)) {
+    public void initTimer() {
+        if (mTimer == null && mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
             mTimer = new Timer();
             mTimer.scheduleAtFixedRate(new IntervalTimerTask(), 0, 1000);
         }
@@ -152,19 +147,19 @@ public class TimerService extends Service {
             }
             mExerciseNumber = 1;
             mCurrentExerciseTime = -1;
-            if (mCurrentSet==mTotalSets) {
+            if (mCurrentSet == mTotalSets) {
                 removeNotification();
                 stopUpdatingTimerFragment();
                 mPauseResumeFlag = getResources().getInteger(R.integer.stop);
                 mTimer.cancel();
                 mTimer = null;
-                mCurrentSet=0;
+                mCurrentSet = 0;
             }
         }
     }
 
     private void stopUpdatingTimerFragment() {
-        if(!stopFlag) {
+        if (!stopFlag) {
             Message message = new Message();
             Bundle bundle = new Bundle();
             bundle.putBoolean(getString(R.string.timer_running), false);
@@ -178,7 +173,7 @@ public class TimerService extends Service {
     }
 
     private void updateTimerFragment(String exerciseName) {
-        if(!stopFlag) {
+        if (!stopFlag) {
             Message message = new Message();
             Bundle bundle = new Bundle();
             bundle.putBoolean(getString(R.string.timer_running), true);
@@ -208,9 +203,10 @@ public class TimerService extends Service {
         intent.putExtra(getString(R.string.workout_model), mWorkoutModelArrayList);
         intent.putExtra(getString(R.string.set_number), mTotalSets);
         intent.putExtra(getString(R.string.workout_name), mWorkoutName);
-        intent.putExtra(getString(R.string.exercise_name),exerciseName);
-        intent.putExtra(getString(R.string.timer_state),mPauseResumeFlag);
-        intent.putExtra(getString(R.string.current_set),mCurrentSet);
+        intent.putExtra(getString(R.string.exercise_name), exerciseName);
+        intent.putExtra(getString(R.string.timer_state), mPauseResumeFlag);
+        intent.putExtra(getString(R.string.current_set), mCurrentSet);
+        intent.putExtra(getString(R.string.time), mCurrentExerciseTime);
         intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
         TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
         stackBuilder.addParentStack(MainActivity.class);

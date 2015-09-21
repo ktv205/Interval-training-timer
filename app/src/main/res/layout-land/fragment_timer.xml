@@ -4,13 +4,13 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:gravity="center"
     android:background="@android:color/white">
 
     <TextView
         android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
         android:textSize="45sp"
         tools:text="workoutname"/>
 
@@ -18,23 +18,38 @@
         android:id="@+id/sets_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="45sp"
-        tools:text="set #"/>
+        android:layout_gravity="center_horizontal"
+        android:textSize="50sp"
+        tools:text="set name"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_horizontal"
+        android:orientation="horizontal"
+        android:layout_below="@id/sets_textView"
+        android:layout_margin="15dp">
 
     <TextView
         android:id="@+id/time_text_view"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
+        android:layout_width="0dp"
         android:layout_weight="1"
-        android:layout_gravity="center"
+        android:layout_height="wrap_content"
+        android:gravity="right"
+        android:layout_gravity="center_vertical"
         android:textSize="120sp"
+        android:layout_marginRight="10dp"
         tools:text="00:00"/>
 
     <ImageButton
         android:id="@+id/pause_resume_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_centerInParent="true"
         tools:src="@drawable/ic_play_circle_filled_black_48dp"/>
+    </LinearLayout>
 
 
 </LinearLayout>
