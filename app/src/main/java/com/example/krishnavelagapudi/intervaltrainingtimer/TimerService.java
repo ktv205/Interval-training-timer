@@ -6,8 +6,10 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.app.TaskStackBuilder;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
@@ -18,6 +20,7 @@ import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
@@ -29,6 +32,7 @@ import java.util.TimerTask;
  * Created by krishnavelagapudi on 9/14/15.
  */
 public class TimerService extends Service {
+    private static final String TAG = TimerService.class.getSimpleName();
     private final IBinder mBinder = new TimerBinder();
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private String mWorkoutName;
@@ -52,6 +56,9 @@ public class TimerService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         startNotificationBuilder();
+        IntentFilter filter = new IntentFilter();
+        filter.addAction("action");
+        registerReceiver(notificationActionReceiver, filter);
         return START_NOT_STICKY;
     }
 
@@ -77,6 +84,7 @@ public class TimerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         mNotificationManager.cancel(0);
+        unregisterReceiver(notificationActionReceiver);
     }
 
     public void setMessenger(Messenger messenger) {
@@ -93,9 +101,13 @@ public class TimerService extends Service {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void startNotificationBuilder() {
+        Intent intent=new Intent();
+        intent.setAction("action");
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, intent,PendingIntent.FLAG_CANCEL_CURRENT);
         mBuilder =
                 new NotificationCompat.Builder(this)
-                        .setSmallIcon(R.drawable.timer);
+                        .setSmallIcon(R.drawable.timer)
+                        .addAction(R.drawable.ic_pause_circle_filled_black_18dp, "pause", sentPI);
         mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
@@ -217,6 +229,34 @@ public class TimerService extends Service {
         notification.flags = Notification.FLAG_ONGOING_EVENT;
         mNotificationManager.notify(0, notification);
     }
+
+    private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG,"here in dynamic receiver");
+            if(mPauseResumeFlag==getResources().getInteger(R.integer.resume)){
+                mPauseResumeFlag=getResources().getInteger(R.integer.pause);
+                Intent broadCastIntent=new Intent();
+                broadCastIntent.setAction("action");
+                PendingIntent sentPI = PendingIntent.getBroadcast(TimerService.this, 0, intent,PendingIntent.FLAG_CANCEL_CURRENT);
+                mBuilder =
+                        new NotificationCompat.Builder(TimerService.this)
+                                .setSmallIcon(R.drawable.timer)
+                                .addAction(R.drawable.ic_play_circle_filled_black_18dp, "play", sentPI);
+            }else{
+                mPauseResumeFlag=getResources().getInteger(R.integer.resume);
+                Intent broadCastIntent=new Intent();
+                broadCastIntent.setAction("action");
+                PendingIntent sentPI = PendingIntent.getBroadcast(TimerService.this, 0, intent,PendingIntent.FLAG_CANCEL_CURRENT);
+                mBuilder =
+                        new NotificationCompat.Builder(TimerService.this)
+                                .setSmallIcon(R.drawable.timer)
+                                .addAction(R.drawable.ic_pause_circle_filled_black_18dp, "pause", sentPI);
+            }
+
+
+        }
+    };
 
 
 }
