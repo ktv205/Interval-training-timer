@@ -51,6 +51,15 @@ public class TimerFragment extends Fragment {
         return fragment;
     }
 
+    public void stopService() {
+        if (mBound) {
+            mService.stopMessages(true);
+            getActivity().unbindService(mConnection);
+            mService.stopSelf();
+            mBound = false;
+        }
+    }
+
     public interface OnInfoBarClickListener {
         void onInfoBarClick(ArrayList<WorkoutModel> workoutModelArrayList, int currentSet,
                             int totalSets, int pauseResumeFlag, int currentTime, String currentExerciseName, String workoutName);
@@ -83,8 +92,6 @@ public class TimerFragment extends Fragment {
             int from = checkSourceFromBundle();
             if (from == getResources().getInteger(R.integer.info_bar) ||
                     from == getResources().getInteger(R.integer.notification)) {
-
-            } else {
 
             }
         } else {
@@ -126,19 +133,7 @@ public class TimerFragment extends Fragment {
         }
         mTimeTextView.setText(String.format("%02d", (mCurrentExerciseTime / 60)) + ":"
                 + String.format("%02d", (mCurrentExerciseTime % 60)));
-        if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-            if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
-                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_18dp));
-            } else {
-                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_48dp));
-            }
-        } else {
-            if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
-                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_18dp));
-            } else {
-                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_48dp));
-            }
-        }
+        updatePauseResumeButton();
 
 
     }
@@ -155,28 +150,25 @@ public class TimerFragment extends Fragment {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
             public void onClick(View v) {
-                if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-                    if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
-                        mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_18dp));
-                    } else {
-                        mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_48dp));
-                    }
-                    mService.mPauseResumeFlag = getResources().getInteger(R.integer.pause);
-                    mPauseResumeFlag = getResources().getInteger(R.integer.pause);
-                } else {
-                    if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
-                        mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_18dp));
-
-                    } else {
-                        mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_48dp));
-                    }
+                if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
                     mService.mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-                    if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
-                        mService.initTimer();
-                    }
+                    mService.initTimer();
                     mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-
+                } else if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
+                    mPauseResumeFlag = getResources().getInteger(R.integer.pause);
+                    if (mService != null) {
+                        mService.updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getString(R.string.pause));
+                    }
+                } else {
+                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+                    if (mService != null) {
+                        mService.updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getString(R.string.resume));
+                    }
                 }
+                updatePauseResumeButton();
+                mService.mPauseResumeFlag = mPauseResumeFlag;
+
+
             }
         });
     }
@@ -192,6 +184,25 @@ public class TimerFragment extends Fragment {
             }
         }
         return from;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    public void updatePauseResumeButton() {
+        if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
+            if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
+                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_18dp));
+
+            } else {
+                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_pause_circle_filled_black_48dp));
+            }
+        } else {
+            if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
+                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_18dp));
+            } else {
+                mPauseResumeButton.setImageDrawable(getActivity().getDrawable(R.drawable.ic_play_circle_filled_black_48dp));
+            }
+
+        }
     }
 
 
@@ -269,6 +280,10 @@ public class TimerFragment extends Fragment {
                 if (bundle.getString(getString(R.string.exercise_name)) != null && !bundle.getString(getString(R.string.exercise_name)).isEmpty()) {
                     mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
                 }
+            } else if (bundle.getBoolean(getString(R.string.from_notification))) {
+                mPauseResumeFlag = bundle.getInt(getString(R.string.timer_state));
+                updatePauseResumeButton();
+
             } else {
                 mPauseResumeFlag = getResources().getInteger(R.integer.stop);
             }

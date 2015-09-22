@@ -1,6 +1,8 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
+import android.app.AlertDialog;
 import android.app.FragmentManager;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
@@ -16,7 +18,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private int mTotalCount;
     private int mCurrentCount = 1;
-    private String TAG = MainActivity.class.getSimpleName();
+    private boolean mIsInfoBarAdded = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -45,6 +47,10 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                         .addToBackStack(NewWorkoutFragment.class.getSimpleName())
                         .commit();
             }
+        } else {
+            mTotalCount = savedInstanceState.getInt(getString(R.string.exercise_number), mTotalCount);
+            mCurrentCount = savedInstanceState.getInt(getString(R.string.current_count), mCurrentCount);
+            mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_model));
         }
     }
 
@@ -75,7 +81,6 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     @Override
     public void onTimePicked(String workoutName, int minutes, int seconds) {
         mWorkoutModelArrayList.add(new WorkoutModel(workoutName, minutes, seconds));
-
         if (mCurrentCount == mTotalCount) {
             Bundle bundle = new Bundle();
             bundle.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
@@ -116,6 +121,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         }
     }
 
+
     private void startTimePickerDialog() {
         Bundle bundle = new Bundle();
         bundle.putInt(getString(R.string.pick_time_for), getResources().getInteger(R.integer.pick_time));
@@ -126,13 +132,8 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
     @Override
     public void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number, String workoutName) {
-        Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(getString(R.string.workout_model), workoutModelArrayList);
-        bundle.putInt(getString(R.string.set_number), number);
-        bundle.putInt(getString(R.string.current_set), 1);
-        bundle.putString(getString(R.string.workout_name), workoutName);
-        bundle.putString(getString(R.string.exercise_name), workoutModelArrayList.get(0).getExerciseName());
-        bundle.putInt(getString(R.string.timer_state), getResources().getInteger(R.integer.resume));
+        Bundle bundle = buildTimerFragmentBundle(workoutModelArrayList, number, 1, getResources().getInteger(R.integer.resume),
+                0, workoutModelArrayList.get(0).getExerciseName(), workoutName);
         TimerFragment timerFragment = TimerFragment.newInstance(bundle);
         getFragmentManager().beginTransaction()
                 .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
@@ -164,21 +165,20 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         if (getFragmentManager().getBackStackEntryCount() > 0) {
             TimerFragment timerFragment = (TimerFragment) getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName());
             getFragmentManager().popBackStack(NewWorkoutFragment.class.getSimpleName(), FragmentManager.POP_BACK_STACK_INCLUSIVE);
-            Bundle bundle = new Bundle();
             if (timerFragment != null) {
-                bundle.putParcelableArrayList(getString(R.string.workout_model), timerFragment.mWorkoutModelArrayList);
-                bundle.putInt(getString(R.string.set_number), timerFragment.mTotalSets);
-                bundle.putInt(getString(R.string.current_set), timerFragment.mCurrentSet);
-                bundle.putString(getString(R.string.workout_name), timerFragment.mWorkoutName);
-                bundle.putString(getString(R.string.exercise_name), timerFragment.mCurrentExerciseName);
-                bundle.putInt(getString(R.string.timer_state), timerFragment.mPauseResumeFlag);
-                bundle.putInt(getString(R.string.time), timerFragment.mCurrentExerciseTime);
+                Bundle bundle;
+                bundle = buildTimerFragmentBundle(timerFragment.mWorkoutModelArrayList, timerFragment.mTotalSets
+                        , timerFragment.mCurrentSet, timerFragment.mPauseResumeFlag, timerFragment.mCurrentExerciseTime, timerFragment.mCurrentExerciseName, timerFragment.mWorkoutName);
+                bundle.putInt(getString(R.string.how_to_lay), getResources().getInteger(R.integer.info_bar));
+                getFragmentManager()
+                        .beginTransaction()
+                        .add(R.id.relative_container, TimerFragment.newInstance(bundle), TimerFragment.class.getSimpleName())
+                        .commit();
+                mIsInfoBarAdded = true;
+            } else {
+                mIsInfoBarAdded = false;
             }
-            bundle.putInt(getString(R.string.how_to_lay), getResources().getInteger(R.integer.info_bar));
-            getFragmentManager()
-                    .beginTransaction()
-                    .add(R.id.relative_container, TimerFragment.newInstance(bundle), TimerFragment.class.getSimpleName())
-                    .commit();
+
         } else {
             super.onBackPressed();
         }
@@ -187,28 +187,59 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
     @Override
     public void showExerciseNumberPickerDialog() {
-        Bundle bundle = new Bundle();
-        bundle.putInt(getString(R.string.pick_number_for), getResources().getInteger(R.integer.exercise_number));
-        NumberPickerDialog numberPickerDialog = NumberPickerDialog.newInstance(bundle);
-        numberPickerDialog.show(getFragmentManager(), NumberPickerDialog.class.getSimpleName());
+        final Bundle bundle = new Bundle();
+        if (mIsInfoBarAdded) {
+            AlertDialog.Builder builder = new AlertDialog.Builder(this);
+            builder.setMessage("Your current workout will be stopped.");
+            builder.setTitle("Starting New Workout");
+            builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                    TimerFragment timerFragment = (TimerFragment) getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName());
+                    timerFragment.stopService();
+                    getFragmentManager().beginTransaction().remove(timerFragment).commit();
+                    bundle.putInt(getString(R.string.pick_number_for), getResources().getInteger(R.integer.exercise_number));
+                    NumberPickerDialog numberPickerDialog = NumberPickerDialog.newInstance(bundle);
+                    numberPickerDialog.show(getFragmentManager(), NumberPickerDialog.class.getSimpleName());
+                }
+            });
+            builder.setNegativeButton(R.string.cancel, new DialogInterface.OnClickListener() {
+                @Override
+                public void onClick(DialogInterface dialog, int which) {
+                }
+            });
+            AlertDialog dialog = builder.create();
+            dialog.show();
+            mIsInfoBarAdded = false;
+        } else {
+            bundle.putInt(getString(R.string.pick_number_for), getResources().getInteger(R.integer.exercise_number));
+            NumberPickerDialog numberPickerDialog = NumberPickerDialog.newInstance(bundle);
+            numberPickerDialog.show(getFragmentManager(), NumberPickerDialog.class.getSimpleName());
+        }
     }
 
     @Override
     public void onInfoBarClick(ArrayList<WorkoutModel> workoutModelArrayList, int currentSet, int totalSets, int pauseResumeFlag, int currentTime, String currentExerciseName, String workoutName) {
         getFragmentManager().beginTransaction().remove(getFragmentManager().findFragmentByTag(TimerFragment.class.getSimpleName())).commit();
-        Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(getString(R.string.workout_model), workoutModelArrayList);
-        bundle.putInt(getString(R.string.set_number), totalSets);
-        bundle.putInt(getString(R.string.current_set), currentSet);
-        bundle.putString(getString(R.string.workout_name), workoutName);
-        bundle.putString(getString(R.string.exercise_name), currentExerciseName);
-        bundle.putInt(getString(R.string.timer_state), pauseResumeFlag);
-        bundle.putInt(getString(R.string.time), currentTime);
+        Bundle bundle = buildTimerFragmentBundle(workoutModelArrayList, totalSets, currentSet, pauseResumeFlag, currentTime, currentExerciseName, workoutName);
         TimerFragment timerFragment = TimerFragment.newInstance(bundle);
         getFragmentManager()
                 .beginTransaction()
                 .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
                 .addToBackStack(NewWorkoutFragment.class.getSimpleName())
                 .commit();
+    }
+
+    private Bundle buildTimerFragmentBundle(ArrayList<WorkoutModel> workoutModelArrayList, int setNumber
+            , int currentSet, int pauseResumeFlag, int time, String currentExerciseName, String workoutName) {
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(getString(R.string.workout_model), workoutModelArrayList);
+        bundle.putInt(getString(R.string.set_number), setNumber);
+        bundle.putInt(getString(R.string.current_set), currentSet);
+        bundle.putString(getString(R.string.workout_name), workoutName);
+        bundle.putString(getString(R.string.exercise_name), currentExerciseName);
+        bundle.putInt(getString(R.string.timer_state), pauseResumeFlag);
+        bundle.putInt(getString(R.string.time), time);
+        return bundle;
     }
 }
