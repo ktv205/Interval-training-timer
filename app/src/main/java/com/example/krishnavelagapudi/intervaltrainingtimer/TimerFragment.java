@@ -104,9 +104,15 @@ public class TimerFragment extends Fragment {
         if (!Utils.isMyServiceRunning(TimerService.class, getActivity())) {
             getActivity().startService(intent);
         }
-        ((AppCompatActivity) getActivity())
-                .getSupportActionBar()
-                .setTitle(mWorkoutName);
+        if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
+            ((AppCompatActivity) getActivity())
+                    .getSupportActionBar()
+                    .setTitle(getString(R.string.app_name));
+        } else {
+            ((AppCompatActivity) getActivity())
+                    .getSupportActionBar()
+                    .setTitle(mWorkoutName);
+        }
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
         return view;
     }
@@ -157,12 +163,12 @@ public class TimerFragment extends Fragment {
                 } else if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
                     mPauseResumeFlag = getResources().getInteger(R.integer.pause);
                     if (mService != null) {
-                        mService.updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getString(R.string.pause));
+                        mService.updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getString(R.string.resume));
                     }
                 } else {
                     mPauseResumeFlag = getResources().getInteger(R.integer.resume);
                     if (mService != null) {
-                        mService.updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getString(R.string.resume));
+                        mService.updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getString(R.string.pause));
                     }
                 }
                 updatePauseResumeButton();

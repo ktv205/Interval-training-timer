@@ -47,6 +47,7 @@ public class TimerService extends Service {
     NotificationCompat.Builder mBuilder;
     private boolean stopFlag = false;
     private IntervalTimerTask mTimerTask;
+    private boolean mGiveHeadsUpTime = true;
 
     @Nullable
     @Override
@@ -85,12 +86,12 @@ public class TimerService extends Service {
     public void onDestroy() {
         super.onDestroy();
         unregisterReceiver(notificationActionReceiver);
-        if(mTimer!=null) {
+        if (mTimer != null) {
             mTimer.cancel();
             mTimer.purge();
             mTimerTask.cancel();
-            mExerciseNumber=mWorkoutModelArrayList.size()+1;
-            mCurrentExerciseTime=-1;
+            mExerciseNumber = mWorkoutModelArrayList.size() + 1;
+            mCurrentExerciseTime = -1;
         }
     }
 
@@ -108,9 +109,9 @@ public class TimerService extends Service {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void startNotificationBuilder() {
-        Intent intent=new Intent();
+        Intent intent = new Intent();
         intent.setAction(Intent.ACTION_DEFAULT);
-        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, intent,PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_CANCEL_CURRENT);
         mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.timer)
@@ -122,7 +123,7 @@ public class TimerService extends Service {
     public void initTimer() {
         if (mTimer == null && mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
             mTimer = new Timer();
-            mTimerTask=new IntervalTimerTask();
+            mTimerTask = new IntervalTimerTask();
             mTimer.scheduleAtFixedRate(mTimerTask, 0, 1000);
         }
     }
@@ -135,6 +136,22 @@ public class TimerService extends Service {
             if (mCurrentExerciseTime == -1) {
                 mCurrentSet++;
             }
+            if (mGiveHeadsUpTime) {
+                mCurrentExerciseTime = 5;
+                while (mCurrentExerciseTime >= 0) {
+                    updateTimerFragment("Get Ready");
+                    try {
+                        Thread.sleep(1000);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
+                        mCurrentExerciseTime--;
+                    }
+                }
+                mGiveHeadsUpTime = false;
+            }
+            mCurrentExerciseTime = -1;
             while (mExerciseNumber <= mWorkoutModelArrayList.size()) {
                 final WorkoutModel workoutModel = mWorkoutModelArrayList.get(mExerciseNumber - 1);
                 if (mCurrentExerciseTime == -1) {
@@ -174,6 +191,7 @@ public class TimerService extends Service {
                 mTimer.cancel();
                 mTimer = null;
                 mCurrentSet = 0;
+                mGiveHeadsUpTime = true;
             }
         }
     }
@@ -240,9 +258,9 @@ public class TimerService extends Service {
     }
 
     private void sendPauseResumeFlag() {
-        Message message=new Message();
-        Bundle bundle=new Bundle();
-        bundle.putBoolean(getString(R.string.from_notification),true);
+        Message message = new Message();
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(getString(R.string.from_notification), true);
         bundle.putInt(getString(R.string.timer_state), mPauseResumeFlag);
         message.setData(bundle);
         try {
@@ -253,10 +271,10 @@ public class TimerService extends Service {
 
     }
 
-    public void updateNotificationActionButton(int drawableId,String state){
-        Intent broadCastIntent=new Intent();
+    public void updateNotificationActionButton(int drawableId, String state) {
+        Intent broadCastIntent = new Intent();
         broadCastIntent.setAction(Intent.ACTION_DEFAULT);
-        PendingIntent sentPI = PendingIntent.getBroadcast(TimerService.this, 0, broadCastIntent,PendingIntent.FLAG_CANCEL_CURRENT);
+        PendingIntent sentPI = PendingIntent.getBroadcast(TimerService.this, 0, broadCastIntent, PendingIntent.FLAG_CANCEL_CURRENT);
         mBuilder =
                 new NotificationCompat.Builder(TimerService.this)
                         .setSmallIcon(R.drawable.timer)
@@ -266,13 +284,13 @@ public class TimerService extends Service {
     private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG,"here in dynamic receiver");
-            if(mPauseResumeFlag==getResources().getInteger(R.integer.resume)){
-                mPauseResumeFlag=getResources().getInteger(R.integer.pause);
-                updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp,getResources().getString(R.string.resume));
-            }else{
-                mPauseResumeFlag=getResources().getInteger(R.integer.resume);
-                updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp,getResources().getString(R.string.pause));
+            Log.d(TAG, "here in dynamic receiver");
+            if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
+                mPauseResumeFlag = getResources().getInteger(R.integer.pause);
+                updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getResources().getString(R.string.resume));
+            } else {
+                mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+                updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getResources().getString(R.string.pause));
 
             }
             sendPauseResumeFlag();
@@ -280,8 +298,6 @@ public class TimerService extends Service {
 
         }
     };
-
-
 
 
 }
