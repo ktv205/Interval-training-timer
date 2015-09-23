@@ -8,18 +8,19 @@
     android:background="@android:color/white">
 
     <TextView
+        android:id="@+id/sets_textView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/darker_gray"
+        android:textSize="45sp"
+        tools:text="sets"/>
+
+    <TextView
         android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="45sp"
-        tools:text="workoutname"/>
-
-    <TextView
-        android:id="@+id/sets_textView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="45sp"
-        tools:text="set #"/>
+        tools:text="woroutname"/>
 
     <TextView
         android:id="@+id/time_text_view"

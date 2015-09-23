@@ -33,7 +33,6 @@ public class ReviewFragment extends Fragment {
     private View mView;
     Button mSetsButton;
     RecyclerView mRecyclerView;
-    private RecyclerViewAdapter mRecyclerViewAdapter;
     private int mNumber = 0;
     private StyleToolbar mStyleToolbar;
 
@@ -68,7 +67,7 @@ public class ReviewFragment extends Fragment {
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
         mWorkoutModelArrayList = getArguments().getParcelableArrayList(getString(R.string.workout_model));
-        mRecyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
+        RecyclerViewAdapter recyclerViewAdapter = new RecyclerViewAdapter(mWorkoutModelArrayList);
         mRecyclerView.setAdapter(new RecyclerViewAdapter(mWorkoutModelArrayList));
         mSetsButton = (Button) mView.findViewById(R.id.sets_button);
         final Button startButton = (Button) mView.findViewById(R.id.start_button);

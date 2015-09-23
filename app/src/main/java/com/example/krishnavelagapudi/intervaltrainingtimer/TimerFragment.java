@@ -156,6 +156,7 @@ public class TimerFragment extends Fragment {
         mCurrentExerciseTime = bundle.getInt(getString(R.string.time));
         mTotalSets = bundle.getInt(getString(R.string.set_number));
         mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
+        mHowToLay=bundle.getInt(getString(R.string.how_to_lay));
         mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
             @TargetApi(Build.VERSION_CODES.LOLLIPOP)
             @Override
@@ -225,6 +226,7 @@ public class TimerFragment extends Fragment {
         outState.putInt(getString(R.string.set_number), mTotalSets);
         outState.putString(getString(R.string.workout_name), mWorkoutName);
         outState.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
+        outState.putInt(getString(R.string.how_to_lay),mHowToLay);
         super.onSaveInstanceState(outState);
 
     }

@@ -8,22 +8,22 @@
     android:layout_height="wrap_content"
     android:background="@android:color/holo_blue_bright">
     <TextView
-        android:id="@+id/title_text_view"
+        android:id="@+id/sets_textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textColor="@android:color/white"
         android:textSize="20sp"
-        tools:text="workoutname"/>
+        tools:text="sets"/>
 
     <TextView
-        android:id="@+id/sets_textView"
+        android:id="@+id/title_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:textColor="@android:color/white"
         android:layout_marginStart="10dp"
         android:layout_marginLeft="10dp"
-        tools:text="set #"/>
+        tools:text="work out"/>
 
     <TextView
         android:id="@+id/time_text_view"

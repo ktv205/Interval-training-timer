@@ -59,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
             mTotalCount = savedInstanceState.getInt(getString(R.string.exercise_number), mTotalCount);
             mCurrentCount = savedInstanceState.getInt(getString(R.string.current_count), mCurrentCount);
             mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_model));
+            mIsInfoBarAdded=savedInstanceState.getBoolean(getString(R.string.how_to_lay));
         }
 
     }
@@ -85,6 +86,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         outState.putInt(getString(R.string.exercise_number), mTotalCount);
         outState.putInt(getString(R.string.current_count), mCurrentCount);
         outState.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
+        outState.putBoolean(getString(R.string.how_to_lay),mIsInfoBarAdded);
         super.onSaveInstanceState(outState);
     }
 
@@ -252,6 +254,18 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         bundle.putInt(getString(R.string.time), time);
         return bundle;
     }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        getIntent().putExtra(getString(R.string.from_notification),false);
+    }
+
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override

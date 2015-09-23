@@ -17,7 +17,7 @@
     <string name="exercise_name">exercise name</string>
     <string name="time">time</string>
     <string name="current_set">current set</string>
-    <string name="exercise_name_hint">Please proive a exercise name</string>
+    <string name="exercise_name_hint">Please provide a exercise name</string>
     <string name="set_number">No of sets</string>
     <string name="workout_name_hint">Provide a workout name</string>
     <string name="edit">edit</string>
