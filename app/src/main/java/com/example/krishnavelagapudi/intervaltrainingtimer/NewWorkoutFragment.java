@@ -16,6 +16,7 @@ import android.widget.Button;
 public class NewWorkoutFragment extends Fragment {
     private static final java.lang.String NUMBER_DIALOG = "number dialog";
     private ExerciseNumber mExerciseNumber;
+    private StyleToolbar mStyleToolbar;
 
 
     public interface ExerciseNumber{
@@ -35,6 +36,8 @@ public class NewWorkoutFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mExerciseNumber=(ExerciseNumber)getActivity();
+        mStyleToolbar=(StyleToolbar)getActivity();
+        mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light,android.R.color.holo_red_dark,android.R.color.white);
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.app_name));
         View view = inflater.inflate(R.layout.fragment_varying_times, container, false);
         Button varyingTimesButton = (Button) view.findViewById(R.id.times_button);

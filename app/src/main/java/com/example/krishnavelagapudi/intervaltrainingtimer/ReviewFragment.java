@@ -35,6 +35,7 @@ public class ReviewFragment extends Fragment {
     RecyclerView mRecyclerView;
     private RecyclerViewAdapter mRecyclerViewAdapter;
     private int mNumber = 0;
+    private StyleToolbar mStyleToolbar;
 
     private OnStartTimerListener mOnStartTimerListener;
 
@@ -61,6 +62,8 @@ public class ReviewFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
         this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
+        mStyleToolbar=(StyleToolbar)getActivity();
+        mStyleToolbar.setToolbarStyle(android.R.color.holo_blue_light,android.R.color.holo_blue_dark,android.R.color.white);
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

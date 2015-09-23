@@ -8,6 +8,18 @@
     android:padding="16dp"
     tools:context=".MainActivity">
 
+    <TextView
+        android:id="@+id/title_text_view"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:textSize="20sp"
+        android:layout_marginBottom="5dp"
+        android:padding="10dp"
+        android:gravity="center_horizontal"
+        android:background="@android:color/holo_blue_light"
+        tools:text="title"/>
+
     <TableLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -38,29 +50,49 @@
                 android:id="@+id/minute_picker"
                 android:layout_margin="5dp"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@color/light_gray"/>
 
             <NumberPicker
                 android:layout_margin="5dp"
                 android:id="@+id/second_picker"
                 android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
+                android:layout_height="wrap_content"
+                android:background="@color/light_gray"/>
         </TableRow>
 
     </TableLayout>
 
     <EditText
-        android:id="@+id/exersice_name_edit_text"
+        android:id="@+id/exercise_name_edit_text"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:hint="@string/exercise_name_hint"
         android:singleLine="true"
         android:imeOptions="actionDone"/>
 
-    <Button
-        android:id="@+id/ok_button"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/ok" />
+        android:layout_marginTop="5dp"
+        android:orientation="horizontal">
+        <Button
+            android:id="@+id/cancel_button"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_red_dark"
+            android:textColor="@android:color/white"
+            android:layout_marginRight="5dp"
+            android:text="@string/cancel"/>
+        <Button
+            android:id="@+id/ok_button"
+            android:layout_width="0dp"
+            android:layout_weight="1"
+            android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:background="@android:color/holo_green_dark"
+            android:text="@string/ok" />
+    </LinearLayout>
 
 </LinearLayout>

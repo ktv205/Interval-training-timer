@@ -41,6 +41,8 @@ public class TimerFragment extends Fragment {
     public String mCurrentExerciseName;
     private int mHowToLay;
     private OnInfoBarClickListener onInfoBarClickListener;
+    private StyleToolbar mStyleToolbar;
+    private boolean mBlink;
 
 
     public static TimerFragment newInstance(Bundle bundle) {
@@ -70,6 +72,8 @@ public class TimerFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         onInfoBarClickListener = (OnInfoBarClickListener) getActivity();
+        mStyleToolbar = (StyleToolbar) getActivity();
+        mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
         mHowToLay = getArguments().getInt(getString(R.string.how_to_lay));
         View view;
         if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
@@ -281,6 +285,13 @@ public class TimerFragment extends Fragment {
             super.handleMessage(msg);
             Bundle bundle = msg.getData();
             if (bundle.getBoolean(getString(R.string.timer_running))) {
+                if (mBlink) {
+                    mStyleToolbar.setToolbarStyle(android.R.color.holo_blue_light, android.R.color.holo_blue_dark, android.R.color.white);
+                    mBlink = false;
+                } else {
+                    mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
+                    mBlink=true;
+                }
                 mCurrentExerciseTime = msg.arg1;
                 mCurrentSet = msg.arg2;
                 if (bundle.getString(getString(R.string.exercise_name)) != null && !bundle.getString(getString(R.string.exercise_name)).isEmpty()) {
@@ -291,6 +302,7 @@ public class TimerFragment extends Fragment {
                 updatePauseResumeButton();
 
             } else {
+                mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
                 mPauseResumeFlag = getResources().getInteger(R.integer.stop);
             }
             fillViews();

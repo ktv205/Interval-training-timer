@@ -9,6 +9,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.NumberPicker;
+import android.widget.TextView;
 
 /**
  * Created by krishnavelagapudi on 9/8/15.
@@ -17,7 +18,7 @@ public class NumberPickerDialog extends DialogFragment {
 
 
     private OnNumberPickedListener mOnNumberPickedListener;
-    private int mNumber=1;
+    private int mNumber = 1;
 
     public static NumberPickerDialog newInstance(Bundle bundle) {
         Bundle args = bundle;
@@ -28,6 +29,12 @@ public class NumberPickerDialog extends DialogFragment {
 
     public interface OnNumberPickedListener {
         void onNumberPicked(int number, int key);
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
     }
 
     @Override
@@ -45,12 +52,15 @@ public class NumberPickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.dialog_number_picker, container, false);
-        final int pickNumberFor=getArguments().getInt(getString(R.string.pick_number_for));
+        TextView titleTextView = (TextView) view.findViewById(R.id.title_text_view);
+        setCancelable(false);
+        final int pickNumberFor = getArguments().getInt(getString(R.string.pick_number_for));
         if (pickNumberFor == getResources().getInteger(R.integer.exercise_number)) {
-            getDialog().setTitle(getString(R.string.exercises_title));
+            titleTextView.setText(getString(R.string.exercises_title));
         } else {
-            getDialog().setTitle(getString(R.string.sets_title));
+            titleTextView.setText(getString(R.string.sets_title));
         }
+
 
         final NumberPicker numberPicker = (NumberPicker) view.findViewById(R.id.number_picker);
         numberPicker.setMaxValue(10);
@@ -61,18 +71,18 @@ public class NumberPickerDialog extends DialogFragment {
                 return String.format("%02d", i);
             }
         });
-        if(savedInstanceState!=null){
-            mNumber=savedInstanceState.getInt(getString(R.string.exercise_number));
+        if (savedInstanceState != null) {
+            mNumber = savedInstanceState.getInt(getString(R.string.exercise_number));
             numberPicker.setValue(mNumber);
         }
-        Button button = (Button) view.findViewById(R.id.ok_button);
+        Button okButton = (Button) view.findViewById(R.id.ok_button);
         numberPicker.setOnValueChangedListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal) {
-                mNumber=numberPicker.getValue();
+                mNumber = numberPicker.getValue();
             }
         });
-        button.setOnClickListener(new View.OnClickListener() {
+        okButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 mOnNumberPickedListener.onNumberPicked(numberPicker.getValue(), pickNumberFor);
@@ -80,12 +90,19 @@ public class NumberPickerDialog extends DialogFragment {
 
             }
         });
+        Button cancelButton = (Button) view.findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().dismiss();
+            }
+        });
         return view;
     }
 
     @Override
     public void onSaveInstanceState(Bundle outState) {
-        outState.putInt(getString(R.string.exercise_number),mNumber);
+        outState.putInt(getString(R.string.exercise_number), mNumber);
         super.onSaveInstanceState(outState);
     }
 }

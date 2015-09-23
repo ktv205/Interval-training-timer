@@ -40,6 +40,12 @@ public class TimePickerDialog extends DialogFragment {
         void onTimePicked(String workoutName, int minutes, int seconds, int position);
     }
 
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        this.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
+    }
+
     public static TimePickerDialog newInstance(Bundle bundle) {
         Bundle args = bundle;
         TimePickerDialog fragment = new TimePickerDialog();
@@ -61,10 +67,11 @@ public class TimePickerDialog extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         final View view = inflater.inflate(R.layout.dialog_time_picker, container, false);
+        TextView titleTextView=(TextView)view.findViewById(R.id.title_text_view);
         final int key = getArguments().getInt(getString(R.string.pick_time_for));
         final NumberPicker minutePicker = (NumberPicker) view.findViewById(R.id.minute_picker);
         final NumberPicker secondPicker = (NumberPicker) view.findViewById(R.id.second_picker);
-        final EditText editText = (EditText) view.findViewById(R.id.exersice_name_edit_text);
+        final EditText editText = (EditText) view.findViewById(R.id.exercise_name_edit_text);
         final Button okButton = (Button) view.findViewById(R.id.ok_button);
         setCancelable(false);
         editText.setOnEditorActionListener(new TextView.OnEditorActionListener() {
@@ -99,9 +106,9 @@ public class TimePickerDialog extends DialogFragment {
         });
 
         if (key == getResources().getInteger(R.integer.pick_time)) {
-            getDialog().setTitle(getString(R.string.create_exercise_title) + " " + getArguments().getInt(getString(R.string.exercise_number)));
+            titleTextView.setText(getString(R.string.create_exercise_title) + " " + getArguments().getInt(getString(R.string.exercise_number)));
         } else {
-            getDialog().setTitle(getString(R.string.edit_exercise_title));
+            titleTextView.setText(getString(R.string.edit_exercise_title));
             WorkoutModel workoutModel = getArguments().getParcelable(getString(R.string.workout_model));
             minutePicker.setValue(workoutModel.getMin());
             secondPicker.setValue(workoutModel.getSec());
@@ -141,6 +148,13 @@ public class TimePickerDialog extends DialogFragment {
                 }
 
 
+            }
+        });
+        Button cancelButton = (Button) view.findViewById(R.id.cancel_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getDialog().dismiss();
             }
         });
         return view;

@@ -1,29 +1,37 @@
 package com.example.krishnavelagapudi.intervaltrainingtimer;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.FragmentManager;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NumberPickerDialog.OnNumberPickedListener,
-        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener {
+        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener,StyleToolbar {
 
     private static final String TIME_DIALOG = "time dialog";
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private int mTotalCount;
     private int mCurrentCount = 1;
     private boolean mIsInfoBarAdded = false;
+    private Toolbar mToolbar;
 
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+        mToolbar=(Toolbar)findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
         boolean fromNotification = checkIfFromNotification();
         if (savedInstanceState == null) {
             if (!fromNotification) {
@@ -52,7 +60,9 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
             mCurrentCount = savedInstanceState.getInt(getString(R.string.current_count), mCurrentCount);
             mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_model));
         }
+
     }
+
 
 
     private boolean checkIfFromNotification() {
@@ -241,5 +251,13 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         bundle.putInt(getString(R.string.timer_state), pauseResumeFlag);
         bundle.putInt(getString(R.string.time), time);
         return bundle;
+    }
+
+    @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+    @Override
+    public void setToolbarStyle(int toolbarColor, int statusBarColor, int textColor) {
+        mToolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor));
+        mToolbar.setTitleTextColor(ContextCompat.getColor(this, textColor));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this,statusBarColor));
     }
 }

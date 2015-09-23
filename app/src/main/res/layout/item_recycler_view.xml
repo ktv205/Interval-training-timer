@@ -2,14 +2,17 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_margin="5dp"
     android:orientation="vertical">
 
     <TextView
         android:id="@+id/exercise_text_view"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:textSize="25dp"
-        android:layout_gravity="center_horizontal" />
+        android:textSize="35sp"
+        android:layout_gravity="center_horizontal"
+        tools:text="hellosodsfsd"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -18,15 +21,19 @@
 
         <TextView
             android:id="@+id/time_text_view"
-            android:textSize="20dp"
+            android:textSize="35sp"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1" />
+            android:layout_weight="1"
+            android:layout_gravity="center_vertical"
+            tools:text="00:00"/>
 
         <Button
             android:id="@+id/edit_button"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:textColor="@android:color/white"
+            android:background="@android:color/holo_blue_light"
             android:text="@string/edit" />
 
     </LinearLayout>

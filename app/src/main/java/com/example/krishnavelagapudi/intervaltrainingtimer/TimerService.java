@@ -45,7 +45,7 @@ public class TimerService extends Service {
     Messenger mMessenger;
     NotificationManager mNotificationManager;
     NotificationCompat.Builder mBuilder;
-    private boolean stopFlag = false;
+    private boolean mStopFlag = false;
     private IntervalTimerTask mTimerTask;
     private boolean mGiveHeadsUpTime = true;
 
@@ -72,7 +72,7 @@ public class TimerService extends Service {
     }
 
     public void stopMessages(boolean b) {
-        stopFlag = b;
+        mStopFlag = b;
 
     }
 
@@ -197,7 +197,7 @@ public class TimerService extends Service {
     }
 
     private void stopUpdatingTimerFragment() {
-        if (!stopFlag) {
+        if (!mStopFlag) {
             Message message = new Message();
             Bundle bundle = new Bundle();
             bundle.putBoolean(getString(R.string.timer_running), false);
@@ -212,7 +212,7 @@ public class TimerService extends Service {
 
 
     private void updateTimerFragment(String exerciseName) {
-        if (!stopFlag) {
+        if (!mStopFlag) {
             Message message = new Message();
             Bundle bundle = new Bundle();
             bundle.putBoolean(getString(R.string.timer_running), true);

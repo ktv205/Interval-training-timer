@@ -17,6 +17,8 @@
         android:id="@+id/sets_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:background="@android:color/holo_blue_dark"
         android:text="@string/set_number" />
 
     <EditText
@@ -31,6 +33,8 @@
         android:id="@+id/start_button"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:textColor="@android:color/white"
+        android:background="@android:color/holo_red_dark"
         android:text="@string/start" />
 
 </LinearLayout>
