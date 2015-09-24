@@ -5,7 +5,6 @@ import android.content.Context;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.KeyEvent;
@@ -59,10 +58,9 @@ public class ReviewFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.review));
         this.mOnStartTimerListener = (OnStartTimerListener) getActivity();
         mStyleToolbar=(StyleToolbar)getActivity();
-        mStyleToolbar.setToolbarStyle(android.R.color.holo_blue_light,android.R.color.holo_blue_dark,android.R.color.white);
+        mStyleToolbar.setToolbarStyle(android.R.color.holo_blue_light,android.R.color.holo_blue_dark,android.R.color.white,getResources().getString(R.string.review));
         mView = inflater.inflate(R.layout.fragment_review, container, false);
         mRecyclerView = (RecyclerView) mView.findViewById(R.id.recycler_view);
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));

@@ -14,7 +14,6 @@ import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.app.AppCompatActivity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -42,29 +41,51 @@ public class TimerFragment extends Fragment {
     private int mHowToLay;
     private OnInfoBarClickListener onInfoBarClickListener;
     private StyleToolbar mStyleToolbar;
-    private boolean mBlink;
+    private boolean mBound;
+    private TimerService mService;
+    public String mWorkoutName;
+    final Messenger mMessenger = new Messenger(new IncomingHandler());
 
 
-    public static TimerFragment newInstance(Bundle bundle) {
+    private ServiceConnection mConnection = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
+            mService = binder.getService();
+            mBound = true;
+            mService.setMessenger(mMessenger);
+            mService.startTimer();
+        }
 
-        Bundle args = bundle;
-        TimerFragment fragment = new TimerFragment();
-        fragment.setArguments(args);
-        return fragment;
-    }
-
-    public void stopService() {
-        if (mBound) {
-            mService.stopMessages(true);
-            getActivity().unbindService(mConnection);
-            mService.stopSelf();
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
             mBound = false;
         }
+    };
+
+    public void stopService() {
+        if(mBound){
+            mService.setMessenger(null);
+            mService.setNotificationBuilderToNull();
+            getActivity().unbindService(mConnection);
+            mService.stopSelf();
+            mBound=false;
+
+        }
     }
+
 
     public interface OnInfoBarClickListener {
         void onInfoBarClick(ArrayList<WorkoutModel> workoutModelArrayList, int currentSet,
                             int totalSets, int pauseResumeFlag, int currentTime, String currentExerciseName, String workoutName);
+    }
+
+
+    public static TimerFragment newInstance(Bundle bundle) {
+        Bundle args = bundle;
+        TimerFragment fragment = new TimerFragment();
+        fragment.setArguments(args);
+        return fragment;
     }
 
 
@@ -73,7 +94,6 @@ public class TimerFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         onInfoBarClickListener = (OnInfoBarClickListener) getActivity();
         mStyleToolbar = (StyleToolbar) getActivity();
-        mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
         mHowToLay = getArguments().getInt(getString(R.string.how_to_lay));
         View view;
         if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
@@ -93,32 +113,58 @@ public class TimerFragment extends Fragment {
         Bundle bundle;
         if (savedInstanceState == null) {
             bundle = getArguments();
-            int from = checkSourceFromBundle();
-            if (from == getResources().getInteger(R.integer.info_bar) ||
-                    from == getResources().getInteger(R.integer.notification)) {
-
-            }
         } else {
             bundle = savedInstanceState;
 
         }
         initializeFields(bundle);
         fillViews();
+        styleToolbar(android.R.color.holo_blue_light, android.R.color.holo_blue_dark);
+        if (bundle.getBoolean(getString(R.string.from_review_fragment))) {
+            startAndBindToService(bundle);
+        } else if (Utils.isMyServiceRunning(TimerService.class, getActivity())) {
+            bindToService();
+        }
+        return view;
+    }
+
+    private void bindToService() {
         Intent intent = new Intent(getActivity(), TimerService.class);
+        getActivity().bindService(intent, mConnection, 0);
+    }
+
+    private void startAndBindToService(Bundle bundle) {
+        Intent intent = new Intent(getActivity(), TimerService.class);
+        intent.putExtras(bundle);
         if (!Utils.isMyServiceRunning(TimerService.class, getActivity())) {
             getActivity().startService(intent);
         }
-        if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
-            ((AppCompatActivity) getActivity())
-                    .getSupportActionBar()
-                    .setTitle(getString(R.string.app_name));
-        } else {
-            ((AppCompatActivity) getActivity())
-                    .getSupportActionBar()
-                    .setTitle(mWorkoutName);
-        }
         getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
-        return view;
+    }
+
+    private void styleToolbar(int light, int dark) {
+        if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
+            mStyleToolbar.setToolbarStyle(light, dark, android.R.color.white, getString(R.string.app_name));
+        } else {
+            mStyleToolbar.setToolbarStyle(light, dark, android.R.color.white, mWorkoutName);
+        }
+    }
+
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (mBound) {
+            mService.setMessenger(null);
+            getActivity().unbindService(mConnection);
+            mBound = false;
+        }
     }
 
     private void initializeViews(View view) {
@@ -126,6 +172,44 @@ public class TimerFragment extends Fragment {
         mCurrentExerciseNameTextView = (TextView) view.findViewById(R.id.title_text_view);
         mCurrentSetTextView = (TextView) view.findViewById(R.id.sets_textView);
         mPauseResumeButton = (ImageButton) view.findViewById(R.id.pause_resume_button);
+        mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
+            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
+            @Override
+            public void onClick(View v) {
+                if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
+                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+                    Bundle bundle = new Bundle();
+                    bundle.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
+                    bundle.putInt(getString(R.string.set_number), mTotalSets);
+                    bundle.putString(getString(R.string.workout_name), mWorkoutName);
+                    startAndBindToService(bundle);
+                } else if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
+                    mPauseResumeFlag = getResources().getInteger(R.integer.pause);
+                } else {
+                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
+
+                }
+                if (mBound) {
+                    mService.setmTimerStateFlag(mPauseResumeFlag);
+                }
+                updatePauseResumeButton();
+
+
+            }
+        });
+    }
+
+
+    private void initializeFields(Bundle bundle) {
+        mPauseResumeFlag = bundle.getInt(getString(R.string.timer_state));
+        mWorkoutName = bundle.getString(getString(R.string.workout_name));
+        mCurrentSet = bundle.getInt(getString(R.string.current_set));
+        mWorkoutModelArrayList = bundle.getParcelableArrayList(getString(R.string.workout_model));
+        mCurrentExerciseTime = bundle.getInt(getString(R.string.time));
+        mTotalSets = bundle.getInt(getString(R.string.set_number));
+        mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
+        mHowToLay = bundle.getInt(getString(R.string.how_to_lay));
+
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -146,55 +230,6 @@ public class TimerFragment extends Fragment {
         updatePauseResumeButton();
 
 
-    }
-
-    private void initializeFields(Bundle bundle) {
-        mPauseResumeFlag = bundle.getInt(getString(R.string.timer_state));
-        mWorkoutName = bundle.getString(getString(R.string.workout_name));
-        mCurrentSet = bundle.getInt(getString(R.string.current_set));
-        mWorkoutModelArrayList = bundle.getParcelableArrayList(getString(R.string.workout_model));
-        mCurrentExerciseTime = bundle.getInt(getString(R.string.time));
-        mTotalSets = bundle.getInt(getString(R.string.set_number));
-        mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
-        mHowToLay=bundle.getInt(getString(R.string.how_to_lay));
-        mPauseResumeButton.setOnClickListener(new View.OnClickListener() {
-            @TargetApi(Build.VERSION_CODES.LOLLIPOP)
-            @Override
-            public void onClick(View v) {
-                if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
-                    mService.mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-                    mService.initTimer();
-                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-                } else if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-                    mPauseResumeFlag = getResources().getInteger(R.integer.pause);
-                    if (mService != null) {
-                        mService.updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getString(R.string.resume));
-                    }
-                } else {
-                    mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-                    if (mService != null) {
-                        mService.updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getString(R.string.pause));
-                    }
-                }
-                updatePauseResumeButton();
-                mService.mPauseResumeFlag = mPauseResumeFlag;
-
-
-            }
-        });
-    }
-
-    private int checkSourceFromBundle() {
-        Bundle bundle = getArguments();
-        int from = -1;
-        if (bundle != null) {
-            if (bundle.getBoolean(getString(R.string.from_notification))) {
-                from = getResources().getInteger(R.integer.notification);
-            } else if (bundle.getBoolean(getString(R.string.from_info_bar))) {
-                from = getResources().getInteger(R.integer.info_bar);
-            }
-        }
-        return from;
     }
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
@@ -226,59 +261,11 @@ public class TimerFragment extends Fragment {
         outState.putInt(getString(R.string.set_number), mTotalSets);
         outState.putString(getString(R.string.workout_name), mWorkoutName);
         outState.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
-        outState.putInt(getString(R.string.how_to_lay),mHowToLay);
+        outState.putInt(getString(R.string.how_to_lay), mHowToLay);
         super.onSaveInstanceState(outState);
 
     }
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        if (mBound) {
-            mService.stopMessages(false);
-        }
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-        if (mBound) {
-            mService.stopMessages(true);
-        }
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mBound) {
-            getActivity().unbindService(mConnection);
-            mBound = false;
-        }
-    }
-
-    private boolean mBound;
-    private TimerService mService;
-    public String mWorkoutName;
-    private ServiceConnection mConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service) {
-            TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
-            mService = binder.getService();
-            mService.stopMessages(false);
-            mBound = true;
-            mService.setMessenger(mMessenger);
-            if (!mService.isTimerRunning()) {
-                mService.setWorkoutArrayList(mWorkoutModelArrayList, mWorkoutName, mTotalSets);
-                mService.mPauseResumeFlag = mPauseResumeFlag;
-                mService.initTimer();
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name) {
-            mBound = false;
-        }
-    };
 
     class IncomingHandler extends Handler {
 
@@ -286,32 +273,18 @@ public class TimerFragment extends Fragment {
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
             Bundle bundle = msg.getData();
-            if (bundle.getBoolean(getString(R.string.timer_running))) {
-                if (mBlink) {
-                    mStyleToolbar.setToolbarStyle(android.R.color.holo_blue_light, android.R.color.holo_blue_dark, android.R.color.white);
-                    mBlink = false;
-                } else {
-                    mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
-                    mBlink=true;
-                }
-                mCurrentExerciseTime = msg.arg1;
-                mCurrentSet = msg.arg2;
-                if (bundle.getString(getString(R.string.exercise_name)) != null && !bundle.getString(getString(R.string.exercise_name)).isEmpty()) {
-                    mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
-                }
-            } else if (bundle.getBoolean(getString(R.string.from_notification))) {
-                mPauseResumeFlag = bundle.getInt(getString(R.string.timer_state));
-                updatePauseResumeButton();
-
-            } else {
-                mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light, android.R.color.holo_red_dark, android.R.color.white);
-                mPauseResumeFlag = getResources().getInteger(R.integer.stop);
-            }
+            mCurrentExerciseTime = msg.arg1;
+            mCurrentSet = msg.arg2;
+            mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
+            mPauseResumeFlag = bundle.getInt(getString(R.string.timer_state));
+            updatePauseResumeButton();
             fillViews();
+            if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
+                stopService();
+            }
+
         }
     }
-
-    final Messenger mMessenger = new Messenger(new IncomingHandler());
 
 
 }

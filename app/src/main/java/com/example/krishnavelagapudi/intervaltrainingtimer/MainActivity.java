@@ -66,6 +66,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
 
 
+
     private boolean checkIfFromNotification() {
         Intent intent = getIntent();
         boolean fromNotification = false;
@@ -144,8 +145,9 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
     @Override
     public void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number, String workoutName) {
-        Bundle bundle = buildTimerFragmentBundle(workoutModelArrayList, number, 1, getResources().getInteger(R.integer.resume),
+        Bundle bundle = buildTimerFragmentBundle(workoutModelArrayList, number, 1, getResources().getInteger(R.integer.stop),
                 0, workoutModelArrayList.get(0).getExerciseName(), workoutName);
+        bundle.putBoolean(getString(R.string.from_review_fragment),true);
         TimerFragment timerFragment = TimerFragment.newInstance(bundle);
         getFragmentManager().beginTransaction()
                 .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
@@ -269,9 +271,10 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void setToolbarStyle(int toolbarColor, int statusBarColor, int textColor) {
+    public void setToolbarStyle(int toolbarColor, int statusBarColor, int textColor,String title) {
         mToolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor));
         mToolbar.setTitleTextColor(ContextCompat.getColor(this, textColor));
-        getWindow().setStatusBarColor(ContextCompat.getColor(this,statusBarColor));
+        getWindow().setStatusBarColor(ContextCompat.getColor(this, statusBarColor));
+        mToolbar.setTitle(title);
     }
 }

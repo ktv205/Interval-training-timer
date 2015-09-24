@@ -41,4 +41,5 @@
     <string name="from_info_bar">from info bar</string>
     <string name="how_to_lay">how to lay</string>
     <string name="from_action_button">action button</string>
+    <string name="from_review_fragment">from review fragment</string>
 </resources>

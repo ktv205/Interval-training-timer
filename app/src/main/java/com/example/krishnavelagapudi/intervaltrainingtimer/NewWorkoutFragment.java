@@ -37,7 +37,7 @@ public class NewWorkoutFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         mExerciseNumber=(ExerciseNumber)getActivity();
         mStyleToolbar=(StyleToolbar)getActivity();
-        mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light,android.R.color.holo_red_dark,android.R.color.white);
+        mStyleToolbar.setToolbarStyle(android.R.color.holo_red_light,android.R.color.holo_red_dark,android.R.color.white,getResources().getString(R.string.app_name));
         ((AppCompatActivity) getActivity()).getSupportActionBar().setTitle(getString(R.string.app_name));
         View view = inflater.inflate(R.layout.fragment_varying_times, container, false);
         Button varyingTimesButton = (Button) view.findViewById(R.id.times_button);

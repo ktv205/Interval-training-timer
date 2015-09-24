@@ -5,12 +5,10 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.app.TaskStackBuilder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.media.MediaPlayer;
 import android.os.Binder;
 import android.os.Build;
 import android.os.Bundle;
@@ -19,7 +17,8 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
-import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
+import android.support.v7.app.NotificationCompat;
 import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
@@ -32,22 +31,32 @@ import java.util.TimerTask;
  * Created by krishnavelagapudi on 9/14/15.
  */
 public class TimerService extends Service {
+
     private static final String TAG = TimerService.class.getSimpleName();
     private final IBinder mBinder = new TimerBinder();
-    private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
-    private String mWorkoutName;
-    private int mCurrentExerciseTime = -1;
-    private int mExerciseNumber = 1;
+    private ArrayList<WorkoutModel> mWorkoutModelArray;
     private int mTotalSets;
-    private int mCurrentSet = 0;
-    int mPauseResumeFlag = 1;
+    private int mTimerStateFlag;
+    private int mCurrentSet;
+    private Messenger mMessenger;
     private Timer mTimer;
-    Messenger mMessenger;
-    NotificationManager mNotificationManager;
-    NotificationCompat.Builder mBuilder;
-    private boolean mStopFlag = false;
-    private IntervalTimerTask mTimerTask;
     private boolean mGiveHeadsUpTime = true;
+    private boolean mIsUpdatePauseAction = false;
+    private boolean mReceiverRegistered=false;
+
+    private NotificationManager mNotificationManager;
+    private android.support.v4.app.NotificationCompat.Builder mBuilder;
+    private String mWorkoutName;
+
+    public void setmTimerStateFlag(int mTimerStateFlag) {
+        this.mTimerStateFlag = mTimerStateFlag;
+        if(mTimerStateFlag==getResources().getInteger(R.integer.resume)){
+            updateNotificationActionButton(R.drawable.pause44,getString(R.string.pause));
+        }else{
+            updateNotificationActionButton(R.drawable.media23,getString(R.string.resume));
+        }
+
+    }
 
     @Nullable
     @Override
@@ -57,24 +66,47 @@ public class TimerService extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_DEFAULT);
-        registerReceiver(notificationActionReceiver, filter);
-        startNotificationBuilder();
-        return START_NOT_STICKY;
-    }
-
-    public boolean isTimerRunning() {
-        if (mTimer == null) {
-            return false;
+        if (intent != null) {
+            Bundle bundle = intent.getExtras();
+            initializeFields(bundle);
+            registerReceiver();
+            startNotificationBuilder();
+            return START_STICKY;
+        } else {
+            startNotificationBuilder();
+            stopSelf();
+            return START_NOT_STICKY;
         }
-        return true;
     }
 
-    public void stopMessages(boolean b) {
-        mStopFlag = b;
+    private void registerReceiver() {
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(Intent.ACTION_DEFAULT);
+        registerReceiver(notificationActionReceiver, intentFilter);
+        mReceiverRegistered=true;
+    }
+
+    private void initializeFields(Bundle bundle) {
+        mWorkoutModelArray = bundle.getParcelableArrayList(getString(R.string.workout_model));
+        mTotalSets = bundle.getInt(getString(R.string.set_number));
+        mTimerStateFlag = getResources().getInteger(R.integer.resume);
+        mWorkoutName = bundle.getString(getString(R.string.workout_name));
+        mCurrentSet = 1;
 
     }
+
+    public void startTimer() {
+        if (mTimer == null) {
+            mTimer = new Timer();
+            IntervalTimerTask intervalTimerTask = new IntervalTimerTask();
+            mTimer.schedule(intervalTimerTask, 0, 1000);
+        }
+    }
+
+    public void setNotificationBuilderToNull() {
+        mBuilder=null;
+    }
+
 
     public class TimerBinder extends Binder {
         TimerService getService() {
@@ -83,27 +115,113 @@ public class TimerService extends Service {
     }
 
     @Override
+    public boolean onUnbind(Intent intent) {
+        mMessenger = null;
+        return super.onUnbind(intent);
+
+    }
+
+    @Override
     public void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(notificationActionReceiver);
-        if (mTimer != null) {
-            mTimer.cancel();
-            mTimer.purge();
-            mTimerTask.cancel();
-            mExerciseNumber = mWorkoutModelArrayList.size() + 1;
-            mCurrentExerciseTime = -1;
+        if(mReceiverRegistered) {
+            unregisterReceiver(notificationActionReceiver);
+            mReceiverRegistered = false;
         }
+        removeNotification();
     }
 
     public void setMessenger(Messenger messenger) {
         mMessenger = messenger;
     }
 
-    public void setWorkoutArrayList(ArrayList<WorkoutModel> workoutArrayList, String workoutName, int totalSets) {
-        mWorkoutModelArrayList = workoutArrayList;
-        mWorkoutName = workoutName;
-        mTotalSets = totalSets;
+    public class IntervalTimerTask extends TimerTask {
 
+        @Override
+        public void run() {
+            int currentExerciseTime = 0;
+            if (mGiveHeadsUpTime) {
+                currentExerciseTime = 5;
+                while (currentExerciseTime >= 0) {
+                    if (mTimerStateFlag == getResources().getInteger(R.integer.resume)) {
+                        updateTimerFragment("Get Ready", currentExerciseTime);
+                        mIsUpdatePauseAction = true;
+                        currentExerciseTime--;
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (mIsUpdatePauseAction) {
+                        currentExerciseTime++;
+                        updateTimerFragment("Get Ready", currentExerciseTime);
+                        mIsUpdatePauseAction = false;
+                    }
+
+                }
+                mGiveHeadsUpTime = false;
+            }
+            int exerciseNumber = 0;
+            String exerciseName = null;
+            while (exerciseNumber < mWorkoutModelArray.size()) {
+                final WorkoutModel workoutModel = mWorkoutModelArray.get(exerciseNumber);
+                exerciseName = workoutModel.getExerciseName();
+                currentExerciseTime = workoutModel.getMin() * 60 + workoutModel.getSec();
+                while (currentExerciseTime >= 0) {
+                    if (mTimerStateFlag == getResources().getInteger(R.integer.resume)) {
+                        updateTimerFragment(exerciseName, currentExerciseTime);
+                        updateNotification(currentExerciseTime, exerciseName);
+                        currentExerciseTime--;
+                        mIsUpdatePauseAction = true;
+                        try {
+                            Thread.sleep(1000);
+                        } catch (InterruptedException e) {
+                            e.printStackTrace();
+                        }
+                    } else if (mIsUpdatePauseAction) {
+                        currentExerciseTime++;
+                        updateTimerFragment(exerciseName, currentExerciseTime);
+                        updateNotification(currentExerciseTime, exerciseName);
+                        mIsUpdatePauseAction = false;
+
+                    }
+
+                }
+                exerciseNumber++;
+            }
+
+            if (mCurrentSet == mTotalSets) {
+                currentExerciseTime = 0;
+                stopTimerAndResetFields();
+                updateTimerFragment(exerciseName, currentExerciseTime);
+            }
+            mCurrentSet++;
+
+
+        }
+    }
+
+    private void updateTimerFragment(String exerciseName, int currentExerciseTime) {
+        if (mMessenger != null) {
+            Message message = new Message();
+            Bundle bundle = new Bundle();
+            bundle.putBoolean(getString(R.string.timer_running), true);
+            message.arg1 = currentExerciseTime;
+            message.arg2 = mCurrentSet;
+            bundle.putString(getString(R.string.exercise_name), exerciseName);
+            bundle.putInt(getString(R.string.timer_state), mTimerStateFlag);
+            message.setData(bundle);
+            try {
+                mMessenger.send(message);
+            } catch (RemoteException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void stopTimerAndResetFields() {
+        mTimer.cancel();
+        mTimerStateFlag = getResources().getInteger(R.integer.stop);
     }
 
 
@@ -120,156 +238,41 @@ public class TimerService extends Service {
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
-    public void initTimer() {
-        if (mTimer == null && mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-            mTimer = new Timer();
-            mTimerTask = new IntervalTimerTask();
-            mTimer.scheduleAtFixedRate(mTimerTask, 0, 1000);
+
+    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+    private void updateNotification(int time, String exerciseName) {
+        Log.d(TAG,"update notification");
+        if(mBuilder!=null) {
+            mBuilder.setContentTitle(mWorkoutName + " " + "set " + mCurrentSet + " " + exerciseName)
+                    .setContentText(String.format("%02d", (time / 60)) + ":" + String.format("%02d", (time % 60)));
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.putExtra(getString(R.string.from_notification), true);
+            intent.putExtra(getString(R.string.workout_model), mWorkoutModelArray);
+            intent.putExtra(getString(R.string.set_number), mTotalSets);
+            intent.putExtra(getString(R.string.workout_name), mWorkoutName);
+            intent.putExtra(getString(R.string.exercise_name), exerciseName);
+            intent.putExtra(getString(R.string.timer_state), mTimerStateFlag);
+            intent.putExtra(getString(R.string.current_set), mCurrentSet);
+            intent.putExtra(getString(R.string.time), time);
+            intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+            stackBuilder.addParentStack(MainActivity.class);
+            stackBuilder.addNextIntent(intent);
+            PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
+            mBuilder.setContentIntent(pendingIntent);
+            Notification notification = mBuilder.build();
+            notification.flags = Notification.FLAG_ONGOING_EVENT;
+            mNotificationManager.notify(0, notification);
         }
     }
 
-    public class IntervalTimerTask extends TimerTask {
-
-
-        @Override
-        public void run() {
-            if (mCurrentExerciseTime == -1) {
-                mCurrentSet++;
-            }
-            if (mGiveHeadsUpTime) {
-                mCurrentExerciseTime = 5;
-                while (mCurrentExerciseTime >= 0) {
-                    updateTimerFragment("Get Ready");
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-                        mCurrentExerciseTime--;
-                    }
-                }
-                mGiveHeadsUpTime = false;
-            }
-            mCurrentExerciseTime = -1;
-            while (mExerciseNumber <= mWorkoutModelArrayList.size()) {
-                final WorkoutModel workoutModel = mWorkoutModelArrayList.get(mExerciseNumber - 1);
-                if (mCurrentExerciseTime == -1) {
-                    if (workoutModel.getMin() > 0) {
-                        mCurrentExerciseTime = workoutModel.getMin() * 60;
-                    }
-                    mCurrentExerciseTime = mCurrentExerciseTime + workoutModel.getSec();
-                }
-                while (mCurrentExerciseTime >= 0) {
-                    final String time = String.format("%02d", (mCurrentExerciseTime / 60)) + ":" + String.format("%02d", (mCurrentExerciseTime % 60));
-                    updateNotification(time, workoutModel.getExerciseName(), mCurrentSet);
-                    updateTimerFragment(workoutModel.getExerciseName());
-                    if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-                        mCurrentExerciseTime--;
-                    }
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                    if (mCurrentExerciseTime == 5) {
-                        int resID = getResources().getIdentifier("countdown", "raw", getPackageName());
-                        MediaPlayer mediaPlayer = MediaPlayer.create(TimerService.this, resID);
-                        mediaPlayer.start();
-                    }
-
-                }
-                mExerciseNumber++;
-
-            }
-            mExerciseNumber = 1;
-            mCurrentExerciseTime = -1;
-            if (mCurrentSet == mTotalSets) {
-                removeNotification();
-                stopUpdatingTimerFragment();
-                mPauseResumeFlag = getResources().getInteger(R.integer.stop);
-                mTimer.cancel();
-                mTimer = null;
-                mCurrentSet = 0;
-                mGiveHeadsUpTime = true;
-            }
-        }
-    }
-
-    private void stopUpdatingTimerFragment() {
-        if (!mStopFlag) {
-            Message message = new Message();
-            Bundle bundle = new Bundle();
-            bundle.putBoolean(getString(R.string.timer_running), false);
-            message.setData(bundle);
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-    }
-
-
-    private void updateTimerFragment(String exerciseName) {
-        if (!mStopFlag) {
-            Message message = new Message();
-            Bundle bundle = new Bundle();
-            bundle.putBoolean(getString(R.string.timer_running), true);
-            message.arg1 = mCurrentExerciseTime;
-            message.arg2 = mCurrentSet;
-            bundle.putString(getString(R.string.exercise_name), exerciseName);
-            message.setData(bundle);
-            try {
-                mMessenger.send(message);
-            } catch (RemoteException e) {
-                e.printStackTrace();
-            }
-        }
-
-    }
 
     public void removeNotification() {
+        Log.d(TAG,"removed");
         mNotificationManager.cancel(0);
     }
 
-    @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
-    private void updateNotification(String time, String exerciseName, int mRepeatTimes) {
-        mBuilder.setContentTitle(mWorkoutName + " " + "set " + mRepeatTimes + " " + exerciseName)
-                .setContentText(time);
-        Intent intent = new Intent(this, MainActivity.class);
-        intent.putExtra(getString(R.string.from_notification), true);
-        intent.putExtra(getString(R.string.workout_model), mWorkoutModelArrayList);
-        intent.putExtra(getString(R.string.set_number), mTotalSets);
-        intent.putExtra(getString(R.string.workout_name), mWorkoutName);
-        intent.putExtra(getString(R.string.exercise_name), exerciseName);
-        intent.putExtra(getString(R.string.timer_state), mPauseResumeFlag);
-        intent.putExtra(getString(R.string.current_set), mCurrentSet);
-        intent.putExtra(getString(R.string.time), mCurrentExerciseTime);
-        intent.setFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
-        stackBuilder.addParentStack(MainActivity.class);
-        stackBuilder.addNextIntent(intent);
-        PendingIntent pendingIntent = stackBuilder.getPendingIntent(0, PendingIntent.FLAG_UPDATE_CURRENT);
-        mBuilder.setContentIntent(pendingIntent);
-        Notification notification = mBuilder.build();
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
-        mNotificationManager.notify(0, notification);
-    }
 
-    private void sendPauseResumeFlag() {
-        Message message = new Message();
-        Bundle bundle = new Bundle();
-        bundle.putBoolean(getString(R.string.from_notification), true);
-        bundle.putInt(getString(R.string.timer_state), mPauseResumeFlag);
-        message.setData(bundle);
-        try {
-            mMessenger.send(message);
-        } catch (RemoteException e) {
-            e.printStackTrace();
-        }
-
-    }
 
     public void updateNotificationActionButton(int drawableId, String state) {
         Intent broadCastIntent = new Intent();
@@ -284,17 +287,13 @@ public class TimerService extends Service {
     private final BroadcastReceiver notificationActionReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "here in dynamic receiver");
-            if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
-                mPauseResumeFlag = getResources().getInteger(R.integer.pause);
-                updateNotificationActionButton(R.drawable.ic_play_circle_filled_black_18dp, getResources().getString(R.string.resume));
+            if (mTimerStateFlag == getResources().getInteger(R.integer.resume)) {
+                mTimerStateFlag = getResources().getInteger(R.integer.pause);
+                updateNotificationActionButton(R.drawable.media23,getString(R.string.resume));
             } else {
-                mPauseResumeFlag = getResources().getInteger(R.integer.resume);
-                updateNotificationActionButton(R.drawable.ic_pause_circle_filled_black_18dp, getResources().getString(R.string.pause));
-
+                mTimerStateFlag = getResources().getInteger(R.integer.resume);
+                updateNotificationActionButton(R.drawable.pause44,getString(R.string.pause));
             }
-            sendPauseResumeFlag();
-
 
         }
     };
