@@ -43,6 +43,8 @@ public class TimerService extends Service {
     private boolean mGiveHeadsUpTime = true;
     private boolean mIsUpdatePauseAction = false;
     private boolean mReceiverRegistered=false;
+    private int mCurrentExerciseTime;
+    private String mExerciseName;
 
     private NotificationManager mNotificationManager;
     private android.support.v4.app.NotificationCompat.Builder mBuilder;
@@ -139,22 +141,22 @@ public class TimerService extends Service {
 
         @Override
         public void run() {
-            int currentExerciseTime = 0;
+            mCurrentExerciseTime = 0;
             if (mGiveHeadsUpTime) {
-                currentExerciseTime = 5;
-                while (currentExerciseTime >= 0) {
+                mCurrentExerciseTime = 5;
+                while (mCurrentExerciseTime >= 0) {
                     if (mTimerStateFlag == getResources().getInteger(R.integer.resume)) {
-                        updateTimerFragment("Get Ready", currentExerciseTime);
+                        updateTimerFragment("Get Ready", mCurrentExerciseTime);
                         mIsUpdatePauseAction = true;
-                        currentExerciseTime--;
+                        mCurrentExerciseTime--;
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
                             e.printStackTrace();
                         }
                     } else if (mIsUpdatePauseAction) {
-                        currentExerciseTime++;
-                        updateTimerFragment("Get Ready", currentExerciseTime);
+                        mCurrentExerciseTime++;
+                        updateTimerFragment("Get Ready", mCurrentExerciseTime);
                         mIsUpdatePauseAction = false;
                     }
 
@@ -162,16 +164,16 @@ public class TimerService extends Service {
                 mGiveHeadsUpTime = false;
             }
             int exerciseNumber = 0;
-            String exerciseName = null;
+            mExerciseName = null;
             while (exerciseNumber < mWorkoutModelArray.size()) {
                 final WorkoutModel workoutModel = mWorkoutModelArray.get(exerciseNumber);
-                exerciseName = workoutModel.getExerciseName();
-                currentExerciseTime = workoutModel.getMin() * 60 + workoutModel.getSec();
-                while (currentExerciseTime >= 0) {
+                mExerciseName = workoutModel.getExerciseName();
+                mCurrentExerciseTime = workoutModel.getMin() * 60 + workoutModel.getSec();
+                while (mCurrentExerciseTime >= 0) {
                     if (mTimerStateFlag == getResources().getInteger(R.integer.resume)) {
-                        updateTimerFragment(exerciseName, currentExerciseTime);
-                        updateNotification(currentExerciseTime, exerciseName);
-                        currentExerciseTime--;
+                        updateTimerFragment(mExerciseName, mCurrentExerciseTime);
+                        updateNotification(mCurrentExerciseTime, mExerciseName);
+                        mCurrentExerciseTime--;
                         mIsUpdatePauseAction = true;
                         try {
                             Thread.sleep(1000);
@@ -179,9 +181,9 @@ public class TimerService extends Service {
                             e.printStackTrace();
                         }
                     } else if (mIsUpdatePauseAction) {
-                        currentExerciseTime++;
-                        updateTimerFragment(exerciseName, currentExerciseTime);
-                        updateNotification(currentExerciseTime, exerciseName);
+                        mCurrentExerciseTime++;
+                        updateTimerFragment(mExerciseName, mCurrentExerciseTime);
+                        updateNotification(mCurrentExerciseTime, mExerciseName);
                         mIsUpdatePauseAction = false;
 
                     }
@@ -191,9 +193,9 @@ public class TimerService extends Service {
             }
 
             if (mCurrentSet == mTotalSets) {
-                currentExerciseTime = 0;
+                mCurrentExerciseTime = 0;
                 stopTimerAndResetFields();
-                updateTimerFragment(exerciseName, currentExerciseTime);
+                updateTimerFragment(mExerciseName, mCurrentExerciseTime);
             }
             mCurrentSet++;
 
@@ -241,7 +243,6 @@ public class TimerService extends Service {
 
     @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
     private void updateNotification(int time, String exerciseName) {
-        Log.d(TAG,"update notification");
         if(mBuilder!=null) {
             mBuilder.setContentTitle(mWorkoutName + " " + "set " + mCurrentSet + " " + exerciseName)
                     .setContentText(String.format("%02d", (time / 60)) + ":" + String.format("%02d", (time % 60)));
@@ -297,6 +298,18 @@ public class TimerService extends Service {
 
         }
     };
+
+    public Bundle getBundle(){
+        Bundle bundle = new Bundle();
+        bundle.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArray);
+        bundle.putInt(getString(R.string.set_number), mTotalSets);
+        bundle.putInt(getString(R.string.current_set), mCurrentSet);
+        bundle.putString(getString(R.string.workout_name), mWorkoutName);
+        bundle.putString(getString(R.string.exercise_name), mExerciseName);
+        bundle.putInt(getString(R.string.timer_state), mTimerStateFlag);
+        bundle.putInt(getString(R.string.time), mCurrentExerciseTime);
+        return bundle;
+    }
 
 
 }

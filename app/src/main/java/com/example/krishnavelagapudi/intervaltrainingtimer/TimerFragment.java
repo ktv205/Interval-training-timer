@@ -28,6 +28,7 @@ import java.util.ArrayList;
  * Created by krishnavelagapudi on 9/9/15.
  */
 public class TimerFragment extends Fragment {
+    private static final String TAG = TimerFragment.class.getSimpleName();
     TextView mTimeTextView;
     public int mCurrentSet;
     public ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
@@ -45,6 +46,7 @@ public class TimerFragment extends Fragment {
     private TimerService mService;
     public String mWorkoutName;
     final Messenger mMessenger = new Messenger(new IncomingHandler());
+    public boolean mFromRecentApps;
 
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -54,6 +56,11 @@ public class TimerFragment extends Fragment {
             mService = binder.getService();
             mBound = true;
             mService.setMessenger(mMessenger);
+            if(mFromRecentApps){
+                Bundle bundle=mService.getBundle();
+                initializeFields(bundle);
+                fillViews();
+            }
             mService.startTimer();
         }
 
@@ -95,9 +102,13 @@ public class TimerFragment extends Fragment {
         onInfoBarClickListener = (OnInfoBarClickListener) getActivity();
         mStyleToolbar = (StyleToolbar) getActivity();
         mHowToLay = getArguments().getInt(getString(R.string.how_to_lay));
+        mFromRecentApps=getArguments().getBoolean(getString(R.string.from_recent_apps));
         View view;
         if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
             view = inflater.inflate(R.layout.fragment_timer_info_bar, container, false);
+            if(mFromRecentApps){
+                bindToService();
+            }
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -110,20 +121,26 @@ public class TimerFragment extends Fragment {
         }
 
         initializeViews(view);
-        Bundle bundle;
+        Bundle bundle = null;
         if (savedInstanceState == null) {
-            bundle = getArguments();
+            if(!mFromRecentApps) {
+                bundle = getArguments();
+            }
         } else {
             bundle = savedInstanceState;
 
         }
-        initializeFields(bundle);
-        fillViews();
+        if(bundle!=null) {
+            initializeFields(bundle);
+            fillViews();
+        }
         styleToolbar(android.R.color.holo_blue_light, android.R.color.holo_blue_dark);
-        if (bundle.getBoolean(getString(R.string.from_review_fragment))) {
-            startAndBindToService(bundle);
-        } else if (Utils.isMyServiceRunning(TimerService.class, getActivity())) {
-            bindToService();
+        if(!mFromRecentApps) {
+            if (bundle.getBoolean(getString(R.string.from_review_fragment))) {
+                startAndBindToService(bundle);
+            } else if (Utils.isMyServiceRunning(TimerService.class, getActivity())) {
+                bindToService();
+            }
         }
         return view;
     }
@@ -208,7 +225,6 @@ public class TimerFragment extends Fragment {
         mCurrentExerciseTime = bundle.getInt(getString(R.string.time));
         mTotalSets = bundle.getInt(getString(R.string.set_number));
         mCurrentExerciseName = bundle.getString(getString(R.string.exercise_name));
-        mHowToLay = bundle.getInt(getString(R.string.how_to_lay));
 
     }
 

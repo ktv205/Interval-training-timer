@@ -42,4 +42,5 @@
     <string name="how_to_lay">how to lay</string>
     <string name="from_action_button">action button</string>
     <string name="from_review_fragment">from review fragment</string>
+    <string name="from_recent_apps">from recent apps</string>
 </resources>

@@ -19,6 +19,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener,StyleToolbar {
 
     private static final String TIME_DIALOG = "time dialog";
+    private static final String TAG = MainActivity.class.getSimpleName();
     private ArrayList<WorkoutModel> mWorkoutModelArrayList = new ArrayList<>();
     private int mTotalCount;
     private int mCurrentCount = 1;
@@ -35,11 +36,25 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         boolean fromNotification = checkIfFromNotification();
         if (savedInstanceState == null) {
             if (!fromNotification) {
-                NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
-                getFragmentManager()
-                        .beginTransaction()
-                        .replace(R.id.relative_container, newWorkoutFragment, NewWorkoutFragment.class.getSimpleName())
-                        .commit();
+                if(Utils.isMyServiceRunning(TimerService.class,this)){
+                    getFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.relative_container,NewWorkoutFragment.newInstance(null),NewWorkoutFragment.class.getSimpleName())
+                            .commit();
+                    Bundle bundle=new Bundle();
+                    bundle.putInt(getString(R.string.how_to_lay), getResources().getInteger(R.integer.info_bar));
+                    bundle.putBoolean(getString(R.string.from_recent_apps),true);
+                    getFragmentManager()
+                            .beginTransaction()
+                            .add(R.id.relative_container, TimerFragment.newInstance(bundle), TimerFragment.class.getSimpleName())
+                            .commit();
+                }else {
+                    NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
+                    getFragmentManager()
+                            .beginTransaction()
+                            .replace(R.id.relative_container, newWorkoutFragment, NewWorkoutFragment.class.getSimpleName())
+                            .commit();
+                }
             } else {
                 TimerFragment timerFragment;
                 NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
@@ -265,7 +280,6 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        getIntent().putExtra(getString(R.string.from_notification),false);
     }
 
 
