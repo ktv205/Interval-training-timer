@@ -19,7 +19,6 @@ import android.os.RemoteException;
 import android.support.annotation.Nullable;
 import android.support.v4.app.TaskStackBuilder;
 import android.support.v7.app.NotificationCompat;
-import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
@@ -116,12 +115,6 @@ public class TimerService extends Service {
         }
     }
 
-    @Override
-    public boolean onUnbind(Intent intent) {
-        mMessenger = null;
-        return super.onUnbind(intent);
-
-    }
 
     @Override
     public void onDestroy() {
@@ -196,6 +189,8 @@ public class TimerService extends Service {
                 mCurrentExerciseTime = 0;
                 stopTimerAndResetFields();
                 updateTimerFragment(mExerciseName, mCurrentExerciseTime);
+                removeNotification();
+                stopSelf();
             }
             mCurrentSet++;
 
@@ -269,7 +264,6 @@ public class TimerService extends Service {
 
 
     public void removeNotification() {
-        Log.d(TAG,"removed");
         mNotificationManager.cancel(0);
     }
 

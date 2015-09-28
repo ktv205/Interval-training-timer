@@ -19,8 +19,6 @@
         <service
             android:name=".TimerService"
             android:exported="false"></service>
-        <receiver android:name=".NotificationActionReceiver"
-            android:exported="false"></receiver>
     </application>
 
 </manifest>

@@ -10,13 +10,14 @@ import android.os.Bundle;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 
 import com.example.krishnavelagapudi.intervaltrainingtimer.models.WorkoutModel;
 
 import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity implements NumberPickerDialog.OnNumberPickedListener,
-        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener,StyleToolbar {
+        TimePickerDialog.OnTimePickedListener, ReviewFragment.OnStartTimerListener, NewWorkoutFragment.ExerciseNumber, TimerFragment.OnInfoBarClickListener, StyleToolbar {
 
     private static final String TIME_DIALOG = "time dialog";
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -31,24 +32,25 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        mToolbar=(Toolbar)findViewById(R.id.toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
         boolean fromNotification = checkIfFromNotification();
         if (savedInstanceState == null) {
             if (!fromNotification) {
-                if(Utils.isMyServiceRunning(TimerService.class,this)){
+                if (Utils.isMyServiceRunning(TimerService.class, this)) {
+                    mIsInfoBarAdded = true;
                     getFragmentManager()
                             .beginTransaction()
-                            .add(R.id.relative_container,NewWorkoutFragment.newInstance(null),NewWorkoutFragment.class.getSimpleName())
+                            .add(R.id.relative_container, NewWorkoutFragment.newInstance(null), NewWorkoutFragment.class.getSimpleName())
                             .commit();
-                    Bundle bundle=new Bundle();
+                    Bundle bundle = new Bundle();
                     bundle.putInt(getString(R.string.how_to_lay), getResources().getInteger(R.integer.info_bar));
-                    bundle.putBoolean(getString(R.string.from_recent_apps),true);
+                    bundle.putBoolean(getString(R.string.from_recent_apps), true);
                     getFragmentManager()
                             .beginTransaction()
                             .add(R.id.relative_container, TimerFragment.newInstance(bundle), TimerFragment.class.getSimpleName())
                             .commit();
-                }else {
+                } else {
                     NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
                     getFragmentManager()
                             .beginTransaction()
@@ -56,6 +58,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                             .commit();
                 }
             } else {
+                Log.d(TAG,"from notification");
                 TimerFragment timerFragment;
                 NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
                 getFragmentManager()
@@ -74,18 +77,18 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
             mTotalCount = savedInstanceState.getInt(getString(R.string.exercise_number), mTotalCount);
             mCurrentCount = savedInstanceState.getInt(getString(R.string.current_count), mCurrentCount);
             mWorkoutModelArrayList = savedInstanceState.getParcelableArrayList(getString(R.string.workout_model));
-            mIsInfoBarAdded=savedInstanceState.getBoolean(getString(R.string.how_to_lay));
+            mIsInfoBarAdded = savedInstanceState.getBoolean(getString(R.string.how_to_lay));
         }
 
     }
 
 
-
-
     private boolean checkIfFromNotification() {
         Intent intent = getIntent();
         boolean fromNotification = false;
-        if (intent != null) {
+        boolean launchedFromHistory = intent != null ? (intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0 : false;
+        Log.d(TAG, "launched from history->" + launchedFromHistory);
+        if (intent != null && !launchedFromHistory) {
             Bundle extras = intent.getExtras();
             if (extras != null) {
                 if (extras.getBoolean(getString(R.string.from_notification))) {
@@ -102,7 +105,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         outState.putInt(getString(R.string.exercise_number), mTotalCount);
         outState.putInt(getString(R.string.current_count), mCurrentCount);
         outState.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
-        outState.putBoolean(getString(R.string.how_to_lay),mIsInfoBarAdded);
+        outState.putBoolean(getString(R.string.how_to_lay), mIsInfoBarAdded);
         super.onSaveInstanceState(outState);
     }
 
@@ -162,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     public void OnStartTimer(ArrayList<WorkoutModel> workoutModelArrayList, int number, String workoutName) {
         Bundle bundle = buildTimerFragmentBundle(workoutModelArrayList, number, 1, getResources().getInteger(R.integer.stop),
                 0, workoutModelArrayList.get(0).getExerciseName(), workoutName);
-        bundle.putBoolean(getString(R.string.from_review_fragment),true);
+        bundle.putBoolean(getString(R.string.from_review_fragment), true);
         TimerFragment timerFragment = TimerFragment.newInstance(bundle);
         getFragmentManager().beginTransaction()
                 .replace(R.id.relative_container, timerFragment, TimerFragment.class.getSimpleName())
@@ -272,20 +275,10 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         return bundle;
     }
 
-    @Override
-    protected void onStop() {
-        super.onStop();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-    }
-
 
     @TargetApi(Build.VERSION_CODES.LOLLIPOP)
     @Override
-    public void setToolbarStyle(int toolbarColor, int statusBarColor, int textColor,String title) {
+    public void setToolbarStyle(int toolbarColor, int statusBarColor, int textColor, String title) {
         mToolbar.setBackgroundColor(ContextCompat.getColor(this, toolbarColor));
         mToolbar.setTitleTextColor(ContextCompat.getColor(this, textColor));
         getWindow().setStatusBarColor(ContextCompat.getColor(this, statusBarColor));

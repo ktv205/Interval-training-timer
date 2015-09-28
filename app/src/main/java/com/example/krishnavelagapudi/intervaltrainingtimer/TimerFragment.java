@@ -14,6 +14,7 @@ import android.os.Message;
 import android.os.Messenger;
 import android.support.annotation.Nullable;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -52,12 +53,13 @@ public class TimerFragment extends Fragment {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.d(TAG, "service connected");
             TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
             mService = binder.getService();
             mBound = true;
             mService.setMessenger(mMessenger);
-            if(mFromRecentApps){
-                Bundle bundle=mService.getBundle();
+            if (mFromRecentApps) {
+                Bundle bundle = mService.getBundle();
                 initializeFields(bundle);
                 fillViews();
             }
@@ -71,12 +73,13 @@ public class TimerFragment extends Fragment {
     };
 
     public void stopService() {
-        if(mBound){
+        if (mBound) {
+            Log.d(TAG, "stop Service");
             mService.setMessenger(null);
             mService.setNotificationBuilderToNull();
             getActivity().unbindService(mConnection);
             mService.stopSelf();
-            mBound=false;
+            mBound = false;
 
         }
     }
@@ -102,11 +105,12 @@ public class TimerFragment extends Fragment {
         onInfoBarClickListener = (OnInfoBarClickListener) getActivity();
         mStyleToolbar = (StyleToolbar) getActivity();
         mHowToLay = getArguments().getInt(getString(R.string.how_to_lay));
-        mFromRecentApps=getArguments().getBoolean(getString(R.string.from_recent_apps));
+        mFromRecentApps = getArguments().getBoolean(getString(R.string.from_recent_apps));
+        Log.d(TAG, "mFromRecentApps->" + mFromRecentApps);
         View view;
         if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
             view = inflater.inflate(R.layout.fragment_timer_info_bar, container, false);
-            if(mFromRecentApps){
+            if (mFromRecentApps) {
                 bindToService();
             }
             view.setOnClickListener(new View.OnClickListener() {
@@ -123,26 +127,46 @@ public class TimerFragment extends Fragment {
         initializeViews(view);
         Bundle bundle = null;
         if (savedInstanceState == null) {
-            if(!mFromRecentApps) {
+            if (!mFromRecentApps) {
                 bundle = getArguments();
             }
         } else {
             bundle = savedInstanceState;
 
         }
-        if(bundle!=null) {
+        if (bundle != null) {
             initializeFields(bundle);
             fillViews();
         }
         styleToolbar(android.R.color.holo_blue_light, android.R.color.holo_blue_dark);
-        if(!mFromRecentApps) {
+        if (!mFromRecentApps) {
             if (bundle.getBoolean(getString(R.string.from_review_fragment))) {
                 startAndBindToService(bundle);
             } else if (Utils.isMyServiceRunning(TimerService.class, getActivity())) {
                 bindToService();
+                Log.d(TAG, "bindToService");
             }
         }
         return view;
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        if(Utils.isMyServiceRunning(TimerService.class,getActivity())){
+            bindToService();
+        }
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        if (mBound) {
+            Log.d(TAG, "onPause");
+            mService.setMessenger(null);
+            getActivity().unbindService(mConnection);
+            mBound = false;
+        }
     }
 
     private void bindToService() {
@@ -167,22 +191,6 @@ public class TimerFragment extends Fragment {
         }
     }
 
-
-    @Override
-    public void onResume() {
-        super.onResume();
-
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
-        if (mBound) {
-            mService.setMessenger(null);
-            getActivity().unbindService(mConnection);
-            mBound = false;
-        }
-    }
 
     private void initializeViews(View view) {
         mTimeTextView = (TextView) view.findViewById(R.id.time_text_view);
@@ -288,6 +296,7 @@ public class TimerFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
+            Log.d(TAG, "onHandleMessage");
             Bundle bundle = msg.getData();
             mCurrentExerciseTime = msg.arg1;
             mCurrentSet = msg.arg2;
