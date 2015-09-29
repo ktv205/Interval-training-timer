@@ -3,7 +3,6 @@ package com.example.krishnavelagapudi.intervaltrainingtimer;
 import android.annotation.TargetApi;
 import android.app.Fragment;
 import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Build;
@@ -53,7 +52,7 @@ public class TimerFragment extends Fragment {
     private ServiceConnection mConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.d(TAG, "service connected");
+            Log.d(TAG,"service conntected");
             TimerService.TimerBinder binder = (TimerService.TimerBinder) service;
             mService = binder.getService();
             mBound = true;
@@ -74,7 +73,6 @@ public class TimerFragment extends Fragment {
 
     public void stopService() {
         if (mBound) {
-            Log.d(TAG, "stop Service");
             mService.setMessenger(null);
             mService.setNotificationBuilderToNull();
             getActivity().unbindService(mConnection);
@@ -102,6 +100,7 @@ public class TimerFragment extends Fragment {
     @Nullable
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        Log.d(TAG,"onCreateView");
         onInfoBarClickListener = (OnInfoBarClickListener) getActivity();
         mStyleToolbar = (StyleToolbar) getActivity();
         mHowToLay = getArguments().getInt(getString(R.string.how_to_lay));
@@ -110,9 +109,6 @@ public class TimerFragment extends Fragment {
         View view;
         if (mHowToLay == getResources().getInteger(R.integer.info_bar)) {
             view = inflater.inflate(R.layout.fragment_timer_info_bar, container, false);
-            if (mFromRecentApps) {
-                bindToService();
-            }
             view.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -141,10 +137,7 @@ public class TimerFragment extends Fragment {
         styleToolbar(android.R.color.holo_blue_light, android.R.color.holo_blue_dark);
         if (!mFromRecentApps) {
             if (bundle.getBoolean(getString(R.string.from_review_fragment))) {
-                startAndBindToService(bundle);
-            } else if (Utils.isMyServiceRunning(TimerService.class, getActivity())) {
-                bindToService();
-                Log.d(TAG, "bindToService");
+                startService(bundle);
             }
         }
         return view;
@@ -153,16 +146,29 @@ public class TimerFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        if(Utils.isMyServiceRunning(TimerService.class,getActivity())){
+        if (Utils.isMyServiceRunning(TimerService.class, getActivity()) && !mBound) {
             bindToService();
         }
+        if(!Utils.isMyServiceRunning(TimerService.class,getActivity())){
+            resetFields();
+        }
+
+    }
+
+    private void resetFields() {
+        mCurrentExerciseTime=0;
+        mCurrentSet=1;
+        mCurrentExerciseName=mWorkoutModelArrayList.get(0).getExerciseName();
+        mPauseResumeFlag=getResources().getInteger(R.integer.stop);
+        fillViews();
+
     }
 
     @Override
     public void onPause() {
         super.onPause();
+        Log.d(TAG, "onPause");
         if (mBound) {
-            Log.d(TAG, "onPause");
             mService.setMessenger(null);
             getActivity().unbindService(mConnection);
             mBound = false;
@@ -174,13 +180,12 @@ public class TimerFragment extends Fragment {
         getActivity().bindService(intent, mConnection, 0);
     }
 
-    private void startAndBindToService(Bundle bundle) {
+    private void startService(Bundle bundle) {
         Intent intent = new Intent(getActivity(), TimerService.class);
         intent.putExtras(bundle);
         if (!Utils.isMyServiceRunning(TimerService.class, getActivity())) {
             getActivity().startService(intent);
         }
-        getActivity().bindService(intent, mConnection, Context.BIND_AUTO_CREATE);
     }
 
     private void styleToolbar(int light, int dark) {
@@ -207,7 +212,8 @@ public class TimerFragment extends Fragment {
                     bundle.putParcelableArrayList(getString(R.string.workout_model), mWorkoutModelArrayList);
                     bundle.putInt(getString(R.string.set_number), mTotalSets);
                     bundle.putString(getString(R.string.workout_name), mWorkoutName);
-                    startAndBindToService(bundle);
+                    startService(bundle);
+                    bindToService();
                 } else if (mPauseResumeFlag == getResources().getInteger(R.integer.resume)) {
                     mPauseResumeFlag = getResources().getInteger(R.integer.pause);
                 } else {
@@ -296,7 +302,6 @@ public class TimerFragment extends Fragment {
         @Override
         public void handleMessage(Message msg) {
             super.handleMessage(msg);
-            Log.d(TAG, "onHandleMessage");
             Bundle bundle = msg.getData();
             mCurrentExerciseTime = msg.arg1;
             mCurrentSet = msg.arg2;
@@ -306,6 +311,7 @@ public class TimerFragment extends Fragment {
             fillViews();
             if (mPauseResumeFlag == getResources().getInteger(R.integer.stop)) {
                 stopService();
+                resetFields();
             }
 
         }

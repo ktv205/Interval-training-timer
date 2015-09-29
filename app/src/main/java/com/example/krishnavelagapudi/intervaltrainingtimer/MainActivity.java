@@ -31,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG,"onResume");
         setContentView(R.layout.activity_main);
         mToolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(mToolbar);
@@ -58,7 +59,6 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
                             .commit();
                 }
             } else {
-                Log.d(TAG,"from notification");
                 TimerFragment timerFragment;
                 NewWorkoutFragment newWorkoutFragment = NewWorkoutFragment.newInstance(null);
                 getFragmentManager()
@@ -87,7 +87,6 @@ public class MainActivity extends AppCompatActivity implements NumberPickerDialo
         Intent intent = getIntent();
         boolean fromNotification = false;
         boolean launchedFromHistory = intent != null ? (intent.getFlags() & Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY) != 0 : false;
-        Log.d(TAG, "launched from history->" + launchedFromHistory);
         if (intent != null && !launchedFromHistory) {
             Bundle extras = intent.getExtras();
             if (extras != null) {
